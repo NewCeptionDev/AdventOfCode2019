@@ -1,10 +1,13 @@
 package day1.task1;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.Test;
 
-class Day1Task1Test {
+import static org.junit.Assert.*;
 
-    @org.junit.jupiter.api.Test void getFuelRequirementTest() {
+public class Day1Task1Test {
+
+    @Test
+    public void getFuelRequirementTest() {
 
         Day1Task1 m = new Day1Task1();
 
