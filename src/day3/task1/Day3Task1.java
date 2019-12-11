@@ -1,10 +1,8 @@
 package day3.task1;
 
-import day1.task1.Day1Task1;
 import javafx.util.Pair;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
@@ -100,8 +98,6 @@ public class Day3Task1 {
             }
         }
 
-        System.out.println("Result Size: " + results.size());
-
         return results;
     }
 
@@ -126,7 +122,6 @@ public class Day3Task1 {
     private int calculateDistance(Pair<Integer, Integer> p) {
         int distance =
                 (p.getKey() - centralPoint.getKey()) + (p.getValue() - centralPoint.getValue());
-        System.out.println("Calculated Distance: " + distance);
         return Math.abs(distance);
     }
 }
