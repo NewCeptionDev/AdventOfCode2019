@@ -1,15 +1,14 @@
-package day10.task1;
+package day10.task2;
 
 import javafx.util.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
-public class Day10Task1 {
-
+public class Day10Task2 {
     private Field[][] fields;
     private List<Field> asteroids = new ArrayList<>();
 
@@ -30,13 +29,13 @@ public class Day10Task1 {
                 input[i] = lines.get(i);
             }
 
-            new Day10Task1(input);
+            new Day10Task2(input);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public Day10Task1(String[] field) {
+    public Day10Task2(String[] field) {
         fields = new Field[field.length][field[0].length()];
         for (int y = 0; y < field.length; y++) {
 
@@ -51,23 +50,61 @@ public class Day10Task1 {
             }
         }
 
-        int max = Integer.MIN_VALUE;
-        Field best = null;
+        List<Pair<Integer, Integer>> found = detectAsteroids(11, 19);
 
-        for (Field a : asteroids) {
-            int found = detectAsteroids(a.x, a.y);
+        List<Pair<Integer, Integer>> transformed = found.stream().map(x -> new Pair<>(-1 * x.getKey(), x.getValue())).collect(
+                Collectors.toList());
 
-            if (found > max) {
-                max = found;
-                best = a;
+        Map<Double, Pair<Integer, Integer>> angles = new HashMap<>();
+
+        for(Pair<Integer, Integer> p : transformed){
+
+            if(p.getValue() == 0){
+                if(p.getKey() > 0){
+                    angles.put(90d, p);
+                } else {
+                    angles.put(270d, p);
+                }
+            }
+            else if(p.getKey() > 0){
+                double gradient = ((double) p.getValue())/p.getKey();
+                double angleX = Math.atan((gradient));
+                double angleXDegree = angleX * (180/Math.PI);
+
+                double angleY = 90 - angleXDegree;
+
+                angles.put(angleY, p);
+            } else if(p.getKey() == 0){
+                if(p.getValue() > 0){
+                    angles.put(0d, p);
+                } else {
+                    angles.put(180d, p);
+                }
+            } else {
+                double gradient = ((double) p.getValue()) / p.getKey();
+                double angleX = Math.atan(gradient);
+                double angleXDegree = angleX * (180/Math.PI);
+                double angleY = 90 - angleXDegree;
+
+                angles.put(angleY + 180, p);
             }
         }
 
-        System.out.println(max);
-        System.out.println(best.x + ":" + best.y);
+        int deleted = 1;
+
+        while (deleted < 200) {
+            double toBeDeleted = Collections.min(angles.keySet());
+            angles.remove(toBeDeleted);
+            deleted++;
+        }
+
+        Pair<Integer, Integer> two = angles.get(Collections.min(angles.keySet()));
+        Pair<Integer, Integer> res = new Pair<>(11 + two.getKey(), 19 - two.getValue());
+
+        System.out.println(res);
     }
 
-    private int detectAsteroids(int x, int y) {
+    private List<Pair<Integer, Integer>> detectAsteroids(int x, int y) {
         List<Pair<Integer, Integer>> list = new ArrayList<>();
         List<Pair<Integer, Integer>> realList = new ArrayList<>();
 
@@ -81,7 +118,7 @@ public class Day10Task1 {
         for (Pair<Integer, Integer> p : list) {
             boolean singular = true;
 
-            if (!p.getValue().equals(p.getKey())  && p.getValue() != 0 && p.getKey() != 0) {
+            if (!p.getValue().equals(p.getKey()) && p.getValue() != 0 && p.getKey() != 0) {
                 int min = Math.min(Math.abs(p.getValue()), Math.abs(p.getKey()));
 
                 for (int i = 2; i <= min && singular; i++) {
@@ -104,8 +141,8 @@ public class Day10Task1 {
                         }
                     }
                 }
-            } else if(p.getValue().equals(p.getKey())){
-                if(p.getKey() < 0){
+            } else if (p.getValue().equals(p.getKey())) {
+                if (p.getKey() < 0) {
                     for (int i = -1; i > p.getKey(); i--) {
                         for (Pair<Integer, Integer> p2 : list) {
                             if (p2.getKey() == i && p2.getValue() == i) {
@@ -113,7 +150,7 @@ public class Day10Task1 {
                             }
                         }
                     }
-                } else if(p.getKey() > 0){
+                } else if (p.getKey() > 0) {
                     for (int i = 1; i < p.getKey(); i++) {
                         for (Pair<Integer, Integer> p2 : list) {
                             if (p2.getKey() == i && p2.getValue() == i) {
@@ -122,8 +159,7 @@ public class Day10Task1 {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 if (p.getKey() < 0) {
                     for (int i = -1; i > p.getKey(); i--) {
                         for (Pair<Integer, Integer> p2 : list) {
@@ -132,7 +168,7 @@ public class Day10Task1 {
                             }
                         }
                     }
-                } else if(p.getKey() > 0){
+                } else if (p.getKey() > 0) {
                     for (int i = 1; i < p.getKey(); i++) {
                         for (Pair<Integer, Integer> p2 : list) {
                             if (p2.getKey() == i && p2.getValue().equals(p.getValue())) {
@@ -148,7 +184,7 @@ public class Day10Task1 {
                             }
                         }
                     }
-                } else if(p.getValue() > 0){
+                } else if (p.getValue() > 0) {
                     for (int i = 1; i < p.getValue(); i++) {
                         for (Pair<Integer, Integer> p2 : list) {
                             if (p2.getKey().equals(p.getKey()) && p2.getValue() == i) {
@@ -164,7 +200,7 @@ public class Day10Task1 {
             }
         }
 
-        return realList.size();
+        return realList;
     }
 
     private class Field {
@@ -182,5 +218,4 @@ public class Day10Task1 {
             return asteroid;
         }
     }
-
 }
