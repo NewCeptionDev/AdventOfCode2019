@@ -18,13 +18,13 @@ public class Day10Task1 {
             BufferedReader reader = new BufferedReader(new FileReader("src/day10/task1/input.txt"));
             String line = reader.readLine();
 
-            while (line != null){
+            while (line != null) {
                 lines.add(line);
                 line = reader.readLine();
             }
 
             String[] input = new String[lines.size()];
-            for(int i = 0; i < input.length; i++){
+            for (int i = 0; i < input.length; i++) {
                 input[i] = lines.get(i);
             }
 
@@ -43,125 +43,145 @@ public class Day10Task1 {
                 Field n = new Field(x, y, splitted[x].equals("#"));
                 fields[y][x] = n;
 
-                if(n.isAsteroid()){
+                if (n.isAsteroid()) {
                     asteroids.add(n);
                 }
             }
         }
 
         int max = Integer.MIN_VALUE;
+        Field best = null;
 
-        for(Field a : asteroids){
+        for (Field a : asteroids) {
             int found = detectableAsteroids(a);
 
-            if(found > max){
+            if (found > max) {
                 max = found;
+                best = a;
             }
         }
 
         System.out.println(max);
+        System.out.println(best.x + ":" + best.y);
     }
 
-    private int detectableAsteroids(Field a){
+    private int detectableAsteroids(Field a) {
         int detectable = 0;
+        int sum = 0;
 
         Field nextField = a.getUpperField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getUpperField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getLowerField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getLowerField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getLeftField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getLeftField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getRightField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getRightField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getLeftLowerField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getLeftLowerField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getLeftUpperField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getLeftUpperField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getRightLowerField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getRightLowerField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
         nextField = a.getRightUpperField();
 
-        while(nextField != null){
-            if(nextField.isAsteroid()){
+        while (nextField != null) {
+            if (nextField.isAsteroid()) {
                 detectable++;
             }
 
             nextField = nextField.getUpperField();
         }
 
-        detectable = detectable > 0 ? detectable-1 : detectable;
+        detectable = detectable > 0 ? detectable - 1 : detectable;
+        sum += detectable;
+        detectable = 0;
 
-        return asteroids.size()-detectable;
+        return asteroids.size() - sum;
     }
 
     private class Field {
@@ -181,56 +201,56 @@ public class Day10Task1 {
 
         private Field getUpperField() {
             if (y - 1 >= 0) {
-                return fields[x][y - 1];
+                return fields[y - 1][x];
             }
             return null;
         }
 
         private Field getLowerField() {
-            if (y + 1 < fields[0].length) {
-                return fields[x][y + 1];
+            if (y + 1 < fields.length) {
+                return fields[y + 1][x];
             }
             return null;
         }
 
         private Field getRightField() {
-            if (x + 1 < fields.length) {
-                return fields[x + 1][y];
+            if (x + 1 < fields[0].length) {
+                return fields[y][x + 1];
             }
             return null;
         }
 
         private Field getLeftField() {
             if (x - 1 >= 0) {
-                return fields[x - 1][y];
+                return fields[y][x - 1];
             }
             return null;
         }
 
         private Field getRightUpperField() {
-            if (x + 1 < fields.length && y - 1 >= 0) {
-                return fields[x + 1][y - 1];
+            if (x + 1 < fields[0].length && y - 1 >= 0) {
+                return fields[y - 1][x + 1];
             }
             return null;
         }
 
         private Field getRightLowerField() {
-            if (x + 1 < fields.length && y + 1 < fields[0].length) {
-                return fields[x + 1][y + 1];
+            if (x + 1 < fields[0].length && y + 1 < fields.length) {
+                return fields[y + 1][x + 1];
             }
             return null;
         }
 
         private Field getLeftUpperField() {
             if (x - 1 >= 0 && y - 1 >= 0) {
-                return fields[x - 1][y - 1];
+                return fields[y - 1][x - 1];
             }
             return null;
         }
 
         private Field getLeftLowerField() {
-            if (x - 1 >= 0 && y + 1 < fields[0].length) {
-                return fields[x - 1][y + 1];
+            if (x - 1 >= 0 && y + 1 < fields.length) {
+                return fields[y + 1][x - 1];
             }
             return null;
         }
