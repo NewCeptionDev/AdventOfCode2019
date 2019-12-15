@@ -10,6 +10,7 @@ import java.util.List;
 
 public class Day12Task2 {
 
+    //TODO
     private List<Moon> moons = new ArrayList<>();
     private List<Pair<Moon, Moon>> moonPairs = new ArrayList<>();
 
