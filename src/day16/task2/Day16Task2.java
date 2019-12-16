@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 
 public class Day16Task2 {
 
+    //TODO
+
     private List<Integer> inputs;
     private List<Integer> pattern = new ArrayList<>();
 
@@ -31,9 +33,11 @@ public class Day16Task2 {
 
         this.inputs = new ArrayList<>();
 
-        for(int i = 0; i < 10000; i++){
-            inputs.addAll(sequence);
-        }
+        //for(int i = 0; i < 10000; i++){
+        inputs.addAll(sequence);
+        //}
+
+        System.out.println(inputs);
 
         pattern.add(0);
         pattern.add(1);
@@ -48,18 +52,18 @@ public class Day16Task2 {
         }
 
         int offset = getOffset();
-        System.out.println(getOutput(offset));
+        System.out.println(getOutput(0));
 
     }
 
-    private int getOffset(){
-        String offsetString = "";
+    private int getOffset() {
+        StringBuilder offsetString = new StringBuilder();
 
-        for(int i = 0; i < 7; i++){
-            offsetString += inputs.get(i);
+        for (int i = 0; i < 7; i++) {
+            offsetString.append(inputs.get(i));
         }
 
-        return Integer.parseInt(offsetString);
+        return Integer.parseInt(offsetString.toString());
     }
 
     public List<Integer> fft() {
@@ -67,6 +71,7 @@ public class Day16Task2 {
         for (int i = 1; i <= inputs.size(); i++) {
             outputs.add(applyPattern(i));
         }
+        System.out.println("Outputs: " + outputs);
 
         return reduce(outputs);
     }
@@ -83,11 +88,13 @@ public class Day16Task2 {
     }
 
     public int applyPattern(int number) {
+        List<Integer> workingOn = new ArrayList<>(inputs.subList(number-1, inputs.size()));
+
         int currPatternPos = 0;
         int sum = 0;
         int counter = 1;
 
-        for (int i = 0; i < inputs.size(); i++) {
+        for (int i = 0; i < workingOn.size(); i++) {
             if (counter == number) {
                 counter = 0;
                 currPatternPos++;
@@ -101,19 +108,19 @@ public class Day16Task2 {
                 counter++;
             }
 
-            sum += pattern.get(currPatternPos) * inputs.get(i);
+            sum += pattern.get(currPatternPos) * workingOn.get(i);
         }
 
         return sum;
     }
 
-    private String getOutput (int offset){
-        String result = "";
+    private String getOutput(int offset) {
+        StringBuilder result = new StringBuilder();
 
-        for(int i = offset; i < offset+8; i++){
-            result += String.valueOf(inputs.get(i));
+        for (int i = offset; i < offset + 8; i++) {
+            result.append(inputs.get(i));
         }
 
-        return result;
+        return result.toString();
     }
 }
