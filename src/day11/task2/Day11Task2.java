@@ -3,10 +3,12 @@ package day11.task2;
 import javafx.util.Pair;
 import util.IntCodeComputer;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Day11Task2 {
@@ -29,6 +31,47 @@ public class Day11Task2 {
 
     }
 
+    enum Direction {
+        UP, DOWN, LEFT, RIGHT;
+
+        static {
+            UP.left = LEFT;
+            UP.right = RIGHT;
+            LEFT.left = DOWN;
+            LEFT.right = UP;
+            DOWN.left = RIGHT;
+            DOWN.right = LEFT;
+            RIGHT.left = UP;
+            RIGHT.right = DOWN;
+        }
+
+        Direction left;
+        Direction right;
+
+        public Direction turn(int inputDir) {
+            if (inputDir == 0) {
+                return left;
+            } else {
+                return right;
+            }
+        }
+
+        public Pair<Integer, Integer> calculateNewPosition(Pair<Integer, Integer> currentPosition) {
+            switch (this) {
+                case UP:
+                    return new Pair<>(currentPosition.getKey(), currentPosition.getValue() + 1);
+                case DOWN:
+                    return new Pair<>(currentPosition.getKey(), currentPosition.getValue() - 1);
+                case RIGHT:
+                    return new Pair<>(currentPosition.getKey() + 1, currentPosition.getValue());
+                case LEFT:
+                    return new Pair<>(currentPosition.getKey() - 1, currentPosition.getValue());
+                default:
+                    throw new RuntimeException("error");
+            }
+        }
+    }
+
     public Day11Task2(List<Long> in) {
         Map<Integer, Long> input = new HashMap<>();
         for (int i = 0; i < in.size(); i++) {
@@ -41,7 +84,7 @@ public class Day11Task2 {
         IntCodeComputer i = new IntCodeComputer(input, inputs);
         Pair<Integer, Integer> currentPosition = new Pair<>(0, 0);
         List<Pair<Integer, Integer>> alreadyPainted = new ArrayList<>();
-        int currDirection = 0; // 0 == UP - 1 == RIGHT - 2 == DOWN - 3 == LEFT
+        Direction direction = Direction.UP;
 
         while (!i.isRealDone()) {
             inputs.set(0, (long) getField(currentPosition.getKey(), currentPosition.getValue()));
@@ -70,38 +113,15 @@ public class Day11Task2 {
                     alreadyPainted.add(currentPosition);
                 }
 
-                if (outTwo == 0L) {
-                    currDirection = currDirection > 0 ? currDirection - 1 : 3;
-                } else if (outTwo == 1L) {
-                    currDirection = currDirection < 3 ? currDirection + 1 : 0;
-                } else {
-                    System.err.println("Should never happen");
-                }
+                direction = direction.turn(outTwo);
 
-                switch (currDirection) {
-                    case 0:
-                        currentPosition = new Pair<>(currentPosition.getKey(),
-                                currentPosition.getValue() + 1);
-                        break;
-                    case 1:
-                        currentPosition = new Pair<>(currentPosition.getKey() + 1,
-                                currentPosition.getValue());
-                        break;
-                    case 2:
-                        currentPosition = new Pair<>(currentPosition.getKey(),
-                                currentPosition.getValue() - 1);
-                        break;
-                    case 3:
-                        currentPosition = new Pair<>(currentPosition.getKey() - 1,
-                                currentPosition.getValue());
-                        break;
-                }
+                currentPosition = direction.calculateNewPosition(currentPosition);
             }
         }
         print();
     }
 
-    private int getField(int x, int y) {
+    private long getField(int x, int y) {
         return area.getOrDefault(new Pair<>(x, y), 0);
     }
 
@@ -112,24 +132,24 @@ public class Day11Task2 {
         int minX = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE;
 
-        for(Pair<Integer, Integer> p : area.keySet()){
-            if(p.getKey() < minX){
+        for (Pair<Integer, Integer> p : area.keySet()) {
+            if (p.getKey() < minX) {
                 minX = p.getKey();
-            } else if(p.getKey() > maxX){
+            } else if (p.getKey() > maxX) {
                 maxX = p.getKey();
             }
 
-            if(p.getValue() < minY){
+            if (p.getValue() < minY) {
                 minY = p.getValue();
-            } else if(p.getValue() > maxY){
+            } else if (p.getValue() > maxY) {
                 maxY = p.getValue();
             }
         }
 
-        for(int y = minY; y < maxY; y++){
-            for(int x = minX; x < maxX; x++){
-                int field = getField(x,y);
-                if(field == 1){
+        for (int y = minY; y < maxY; y++) {
+            for (int x = minX; x < maxX; x++) {
+                long field = getField(x, y);
+                if (field == 1L) {
                     System.out.print("#");
                 } else {
                     System.out.print(".");

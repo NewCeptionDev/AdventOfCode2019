@@ -79,7 +79,6 @@ public class IntCodeComputer {
                 case 4:
                     writeOutput(Math.toIntExact(transformPosition(currentPosition + 1, mode1)));
                     currentPosition += 2;
-                    System.out.println("Got an Output");
                     done = true;
                     break;
                 case 5:
