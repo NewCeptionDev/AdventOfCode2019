@@ -1,4 +1,4 @@
-package day16.task1;
+package day16.task2;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Day16Task1 {
+public class Day16Task2 {
 
     private List<Integer> inputs;
     private List<Integer> pattern = new ArrayList<>();
@@ -18,15 +18,22 @@ public class Day16Task1 {
             BufferedReader reader = new BufferedReader(new FileReader("src/day16/task1/input.txt"));
             String line = reader.readLine();
 
-            Day16Task1 test = new Day16Task1(line);
+            Day16Task2 test = new Day16Task2(line);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public Day16Task1(String s) {
-        this.inputs =
+    public Day16Task2(String s) {
+
+        List<Integer> sequence =
                 Arrays.stream(s.split("")).map(Integer::parseInt).collect(Collectors.toList());
+
+        this.inputs = new ArrayList<>();
+
+        for(int i = 0; i < 10000; i++){
+            inputs.addAll(sequence);
+        }
 
         pattern.add(0);
         pattern.add(1);
@@ -40,7 +47,19 @@ public class Day16Task1 {
             count++;
         }
 
-        System.out.println(inputs);
+        int offset = getOffset();
+        System.out.println(getOutput(offset));
+
+    }
+
+    private int getOffset(){
+        String offsetString = "";
+
+        for(int i = 0; i < 7; i++){
+            offsetString += inputs.get(i);
+        }
+
+        return Integer.parseInt(offsetString);
     }
 
     public List<Integer> fft() {
@@ -86,5 +105,15 @@ public class Day16Task1 {
         }
 
         return sum;
+    }
+
+    private String getOutput (int offset){
+        String result = "";
+
+        for(int i = offset; i < offset+8; i++){
+            result += String.valueOf(inputs.get(i));
+        }
+
+        return result;
     }
 }
