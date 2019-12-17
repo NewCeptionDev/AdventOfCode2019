@@ -26,6 +26,7 @@ public class IntCodeComputer {
         outputs = new ArrayList<>();
         currentInput = 0;
         done = false;
+        processCode();
     }
 
     public void continueProcess(){
