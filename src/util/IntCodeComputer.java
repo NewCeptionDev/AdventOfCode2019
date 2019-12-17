@@ -28,6 +28,12 @@ public class IntCodeComputer {
         done = false;
     }
 
+    public void continueProcess(){
+        done = false;
+        outputs = new ArrayList<>();
+        processCode();
+    }
+
     public void processCode() {
         while (!done && !error && !realDone) {
             int toParse = Math.toIntExact(getValue(currentPosition));

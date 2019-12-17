@@ -9,7 +9,10 @@ import java.util.stream.Collectors;
 
 public class Day17Task2 {
 
+    //TODO VisitedBlocks not used
+
     public static void main(String[] args) {
+        //TODO UPDATE INPUT
         List<String> inputString = InputReader.read("src/day17/task1/input.txt");
 
         String[] splitted = inputString.get(0).split(",");
