@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 public class Day15Task1 {
 
+    //TODO
+
     public static void main(String[] args) {
         List<String> in = InputReader.read("src/day15/task1/input.txt");
         new Day15Task1(Arrays.stream(in.get(0).split(",")).map(Integer::parseInt)
@@ -43,14 +45,18 @@ public class Day15Task1 {
                     break;
                 case 1:
                     System.out.println("can move");
-                    foundTiles.add(new Pair<>(new Pair<>(position.getKey(), position.getValue()),
-                            "."));
+                    if (getField(position.getKey(), position.getValue()).equals("")) {
+                        foundTiles.add(new Pair<>(new Pair<>(position.getKey(), position.getValue()),
+                                "."));
+                    }
                     nextMove = Math.toIntExact(inputs.get(0));
                     break;
                 case 2:
                     System.out.println("found system");
-                    foundTiles.add(new Pair<>(new Pair<>(position.getKey(), position.getValue()),
-                            "0"));
+                    if (getField(position.getKey(), position.getValue()).equals("")) {
+                        foundTiles.add(new Pair<>(new Pair<>(position.getKey(), position.getValue()),
+                                "0"));
+                    }
                     nextMove = Math.toIntExact(inputs.get(0));
                     done = true;
                     break;
@@ -62,22 +68,31 @@ public class Day15Task1 {
         }
 
         System.out.println("Found: " + foundTiles.size());
+        print();
     }
 
     private int insertWall(int input, Pair<Integer, Integer> pos) {
         System.out.println("hit wall");
         switch (input) {
             case 1:
-                foundTiles.add(new Pair<>(new Pair<>(pos.getKey(), pos.getValue() - 1), "#"));
+                if (getField(pos.getKey(), pos.getValue()).equals("")) {
+                    foundTiles.add(new Pair<>(new Pair<>(pos.getKey(), pos.getValue() - 1), "#"));
+                }
                 return 4;
             case 2:
-                foundTiles.add(new Pair<>(new Pair<>(pos.getKey(), pos.getValue() + 1), "#"));
+                if (getField(pos.getKey(), pos.getValue()).equals("")) {
+                    foundTiles.add(new Pair<>(new Pair<>(pos.getKey(), pos.getValue() + 1), "#"));
+                }
                 return 3;
             case 3:
-                foundTiles.add(new Pair<>(new Pair<>(pos.getKey() - 1, pos.getValue()), "#"));
+                if (getField(pos.getKey(), pos.getValue()).equals("")) {
+                    foundTiles.add(new Pair<>(new Pair<>(pos.getKey() - 1, pos.getValue()), "#"));
+                }
                 return 1;
             case 4:
-                foundTiles.add(new Pair<>(new Pair<>(pos.getKey() + 1, pos.getValue()), "#"));
+                if (getField(pos.getKey(), pos.getValue()).equals("")) {
+                    foundTiles.add(new Pair<>(new Pair<>(pos.getKey() + 1, pos.getValue()), "#"));
+                }
                 return 2;
         }
         return 0;
@@ -101,9 +116,27 @@ public class Day15Task1 {
 
             if(p.getValue() > maxY){
                 maxY = p.getValue();
-                minY = p.getValue();
             }
 
+            if(p.getValue() < minY){
+                minY = p.getValue();
+            }
         }
+
+        for (int y = maxY; y > minY; y--){
+            for(int x = minY; x < maxX; x++){
+                System.out.print(getField(x, y));
+            }
+            System.out.println();
+        }
+    }
+
+    private String getField(int x, int y){
+        for(Pair<Pair<Integer, Integer>, String> p : foundTiles){
+            if(p.getKey().getValue().equals(y) && p.getKey().getKey().equals(x)){
+                return p.getValue();
+            }
+        }
+        return "?";
     }
 }
