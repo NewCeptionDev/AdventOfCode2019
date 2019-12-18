@@ -15,6 +15,7 @@ public class IntCodeComputer {
     private int currentInput = 0;
     private List<Long> outputs = new ArrayList<>();
     private boolean realDone = false;
+    private int stopAfterOutputs = 1;
 
     public IntCodeComputer(Map<Integer, Long> in, List<Long> inputs) {
         this.memory = in;
@@ -33,6 +34,10 @@ public class IntCodeComputer {
         done = false;
         outputs = new ArrayList<>();
         processCode();
+    }
+
+    public void changeStepsTillStop(int i){
+        this.stopAfterOutputs = i;
     }
 
     public void processCode() {
@@ -86,7 +91,9 @@ public class IntCodeComputer {
                 case 4:
                     writeOutput(Math.toIntExact(transformPosition(currentPosition + 1, mode1)));
                     currentPosition += 2;
-                    done = true;
+                    if(stopAfterOutputs == outputs.size()) {
+                        done = true;
+                    }
                     break;
                 case 5:
                     jumpIf(transformPosition(currentPosition + 1, mode1),
