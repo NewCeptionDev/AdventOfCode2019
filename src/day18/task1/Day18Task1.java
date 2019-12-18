@@ -16,6 +16,7 @@ public class Day18Task1 {
     private char[][] field;
     private Map<Character, Pair<Integer, Integer>> keys;
     private Map<Character, List<Pair<Integer, Integer>>> currentBestWay = new HashMap<>();
+    private Map<Pair<Integer, Integer>, Pair<Map<Character, Set<Character>>, Map<Character, List<Pair<Integer, Integer>>>>> savedBestWays = new HashMap<>();
 
     public Day18Task1(List<String> in) {
         field = new char[in.size()][];
@@ -38,10 +39,26 @@ public class Day18Task1 {
             Pair<Integer, Integer> pos, int posMoved) {
         //System.out.println("New Simulation Step. TODO Size: " + toDo.size());
         //System.out.println("Current Steps: " + posMoved);
+
+        //TODO Save old Calculations to reuse
         int minSteps = Integer.MAX_VALUE;
         if (toDo.size() > 0) {
-            Map<Character, Set<Character>> possible = calculateLocksInFrontofKeys(pos, toDo);
-            Map<Character, List<Pair<Integer, Integer>>> bestWaysForMethod = new HashMap<>(currentBestWay);
+            Map<Character, Set<Character>> possible;
+            Map<Character, List<Pair<Integer, Integer>>> bestWaysForMethod;
+            Pair<Map<Character, Set<Character>>, Map<Character, List<Pair<Integer, Integer>>>> oldMoves = getValuesFromPair(pos);
+            if (oldMoves == null) {
+                possible = calculateLocksInFrontofKeys(pos, toDo);
+                bestWaysForMethod = new HashMap<>(currentBestWay);
+                savedBestWays.put(new Pair<>(pos.getKey(), pos.getValue()), new Pair<>(possible, bestWaysForMethod));
+                System.out.println("explored new");
+            } else {
+                System.out.println("Found old State");
+                possible = oldMoves.getKey();
+                for(Character c : collected){
+                   possible.remove((char)(c+32));
+                }
+                bestWaysForMethod = oldMoves.getValue();
+            }
 
             List<Character> toRemove = new ArrayList<>();
 
@@ -83,6 +100,16 @@ public class Day18Task1 {
         }
 
         return minSteps;
+    }
+
+    private Pair<Map<Character, Set<Character>>, Map<Character, List<Pair<Integer, Integer>>>> getValuesFromPair(Pair<Integer, Integer> pair){
+        for(Pair<Integer, Integer> inList : savedBestWays.keySet()){
+            if(inList.getKey().equals(pair.getKey()) && inList.getValue().equals(pair.getValue())){
+                return savedBestWays.get(inList);
+            }
+        }
+
+        return null;
     }
 
     private List<Character> getAllKeysOnWay(char key, List<Pair<Integer, Integer>> bestWays) {
