@@ -1,29 +1,29 @@
-package day14.task1;
+package day14.task2;
 
+import day14.task1.Day14Task1;
 import javafx.util.Pair;
 import util.InputReader;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Day14Task1 {
+public class Day14Task2 {
 
     public static void main(String[] args) {
         List<String> in = InputReader.read("src/day14/task1/input.txt");
 
-        new Day14Task1(in);
+        new Day14Task2(in);
     }
 
     private Map<String, Integer> unUsedMats = new HashMap<>();
     private Map<String, Recipe> recipes = new HashMap<>();
+    private Map<String, Integer> usedForOneCraft = new HashMap<>();
+    private Map<String, Integer> totalUnUsedMats;
     private long usedOre = 0;
 
-    public Day14Task1(List<String> in) {
+    public Day14Task2(List<String> in) {
         for (String s : in) {
             Recipe r = parseRecipe(s);
 
@@ -31,10 +31,57 @@ public class Day14Task1 {
         }
 
         craftRecipe(recipes.get("FUEL"), 1);
-        System.out.println(usedOre);
+
+        int seperateCrafts = Math.toIntExact(1000000000000L / usedOre);
+
+        System.out.println("Unused Mats: " + unUsedMats);
+
+        totalUnUsedMats = new HashMap<>(unUsedMats);
+        totalUnUsedMats.replaceAll((s, v) -> v * seperateCrafts);
+
+        System.out.println(totalUnUsedMats);
+
+        int extraCrafts = 0;
+
+        while(hasEnoughRessources()){
+            for(String s : usedForOneCraft.keySet()){
+                totalUnUsedMats.put(s, totalUnUsedMats.get(s) - usedForOneCraft.get(s));
+            }
+            extraCrafts++;
+        }
+
+        System.out.println("Seperate: " + seperateCrafts);
+        System.out.println("Crafted: " + (seperateCrafts + extraCrafts));
+    }
+
+    //TODO Craft with limited Resources
+
+    private boolean hasEnoughRessources(){
+        boolean hasEnough = true;
+
+        for(String s : usedForOneCraft.keySet()){
+            if (usedForOneCraft.containsKey(s)) {
+                if (totalUnUsedMats.containsKey(s)) {
+                    if(totalUnUsedMats.get(s) < usedForOneCraft.get(s)){
+                        hasEnough = false;
+                    }
+                } else {
+                    System.out.println("Total does not contain " + s);
+                    hasEnough = false;
+                }
+            }
+        }
+
+        return hasEnough;
     }
 
     private void craftRecipe(Recipe r, int amount) {
+        if(usedForOneCraft.containsKey(r.getResult())){
+            usedForOneCraft.put(r.getResult(), usedForOneCraft.get(r.getResult()) + amount);
+        } else {
+            usedForOneCraft.put(r.getResult(), amount);
+        }
+
         if (unUsedMats.containsKey(r.getResult())) {
             if (unUsedMats.get(r.getResult()) > amount) {
                 unUsedMats.put(r.getResult(), unUsedMats.get(r.getResult()) - amount);
