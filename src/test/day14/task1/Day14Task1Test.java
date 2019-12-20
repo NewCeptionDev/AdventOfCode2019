@@ -2,6 +2,8 @@ package day14.task1;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+
 public class Day14Task1Test {
 
     @Test
@@ -9,7 +11,7 @@ public class Day14Task1Test {
         String[] in = new String[] { "10 ORE => 10 A", "1 ORE => 1 B", "7 A, 1 B => 1 C",
                 "7 A, 1 C => 1 D", "7 A, 1 D => 1 E", "7 A, 1 E => 1 FUEL" };
 
-        Day14Task1 t = new Day14Task1(in);
+        Day14Task1 t = new Day14Task1(Arrays.asList(in));
     }
 
     @Test
@@ -18,7 +20,7 @@ public class Day14Task1Test {
                 new String[] { "9 ORE => 2 A", "8 ORE => 3 B", "7 ORE => 5 C", "3 A, 4 B => 1 AB",
                         "5 B, 7 C => 1 BC", "4 C, 1 A => 1 CA", "2 AB, 3 BC, 4 CA => 1 FUEL" };
 
-        Day14Task1 t = new Day14Task1(in);
+        Day14Task1 t = new Day14Task1(Arrays.asList(in));
     }
 
     @Test
@@ -29,7 +31,7 @@ public class Day14Task1Test {
                 "7 DCFZ, 7 PSHF => 2 XJWVT", "165 ORE => 2 GPVTF",
                 "3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT" };
 
-        Day14Task1 t = new Day14Task1(in);
+        Day14Task1 t = new Day14Task1(Arrays.asList(in));
     }
 
     @Test
@@ -42,7 +44,7 @@ public class Day14Task1Test {
                 "5 VJHF, 7 MNCFX, 9 VPVL, 37 CXFTF => 6 GNMV", "145 ORE => 6 MNCFX",
                 "1 NVRVD => 8 CXFTF", "1 VJHF, 6 MNCFX => 4 RFSQX", "176 ORE => 6 VJHF" };
 
-        Day14Task1 t = new Day14Task1(in);
+        Day14Task1 t = new Day14Task1(Arrays.asList(in));
     }
 
     @Test
@@ -59,6 +61,6 @@ public class Day14Task1Test {
                 "3 BHXH, 2 VRPVC => 7 MZWV", "121 ORE => 7 VRPVC", "7 XCVML => 6 RJRHP",
                 "5 BHXH, 4 VRPVC => 5 LTCX" };
 
-        Day14Task1 t = new Day14Task1(in);
+        Day14Task1 t = new Day14Task1(Arrays.asList(in));
     }
 }
