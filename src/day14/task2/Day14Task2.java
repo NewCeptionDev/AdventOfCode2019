@@ -1,6 +1,5 @@
 package day14.task2;
 
-import day14.task1.Day14Task1;
 import javafx.util.Pair;
 import util.InputReader;
 
@@ -17,11 +16,11 @@ public class Day14Task2 {
         new Day14Task2(in);
     }
 
-    private Map<String, Integer> unUsedMats = new HashMap<>();
+    private Map<String, Long> unUsedMats = new HashMap<>();
     private Map<String, Recipe> recipes = new HashMap<>();
     private Map<String, Integer> usedForOneCraft = new HashMap<>();
-    private Map<String, Integer> totalUnUsedMats;
     private long usedOre = 0;
+    private boolean isDone = false;
 
     public Day14Task2(List<String> in) {
         for (String s : in) {
@@ -30,53 +29,40 @@ public class Day14Task2 {
             recipes.put(r.getResult(), r);
         }
 
-        craftRecipe(recipes.get("FUEL"), 1);
+        long crafted = 0;
 
-        int seperateCrafts = Math.toIntExact(1000000000000L / usedOre);
 
-        System.out.println("Unused Mats: " + unUsedMats);
-
-        totalUnUsedMats = new HashMap<>(unUsedMats);
-        totalUnUsedMats.replaceAll((s, v) -> v * seperateCrafts);
-
-        System.out.println(totalUnUsedMats);
-
-        int extraCrafts = 0;
-
-        while(hasEnoughRessources()){
-            for(String s : usedForOneCraft.keySet()){
-                totalUnUsedMats.put(s, totalUnUsedMats.get(s) - usedForOneCraft.get(s));
+        while (!isDone) {
+            while (!hasEnoughRessources() && usedOre < 1000000000000L) {
+                craftRecipe(recipes.get("FUEL"), 1);
+                crafted++;
             }
-            extraCrafts++;
+            craftRecipeWithLimitedResources(unUsedMats, recipes.get("FUEL"), 1);
+            crafted++;
+
         }
 
-        System.out.println("Seperate: " + seperateCrafts);
-        System.out.println("Crafted: " + (seperateCrafts + extraCrafts));
+        System.out.println("Crafted: " + (crafted - 1));
     }
 
-    //TODO Craft with limited Resources
-
-    private boolean hasEnoughRessources(){
+    private boolean hasEnoughRessources() {
         boolean hasEnough = true;
 
-        for(String s : usedForOneCraft.keySet()){
-            if (usedForOneCraft.containsKey(s)) {
-                if (totalUnUsedMats.containsKey(s)) {
-                    if(totalUnUsedMats.get(s) < usedForOneCraft.get(s)){
+        for (String s : usedForOneCraft.keySet()) {
+                if (unUsedMats.containsKey(s)) {
+                    if (unUsedMats.get(s) < usedForOneCraft.get(s)) {
                         hasEnough = false;
                     }
                 } else {
-                    System.out.println("Total does not contain " + s);
                     hasEnough = false;
                 }
-            }
         }
 
         return hasEnough;
     }
 
     private void craftRecipe(Recipe r, int amount) {
-        if(usedForOneCraft.containsKey(r.getResult())){
+        if (usedForOneCraft.containsKey(r.getResult())) {
             usedForOneCraft.put(r.getResult(), usedForOneCraft.get(r.getResult()) + amount);
         } else {
             usedForOneCraft.put(r.getResult(), amount);
@@ -109,7 +95,46 @@ public class Day14Task2 {
                 if (unUsedMats.containsKey(r.getResult())) {
                     unUsedMats.put(r.getResult(), unUsedMats.get(r.getResult()) + tooMuch);
                 } else {
-                    unUsedMats.put(r.getResult(), tooMuch);
+                    unUsedMats.put(r.getResult(), (long) tooMuch);
+                }
+            }
+        }
+    }
+
+    private void craftRecipeWithLimitedResources(Map<String, Long> resource, Recipe r, int amount) {
+        if (resource.containsKey(r.getResult())) {
+            if (resource.get(r.getResult()) > amount) {
+                resource.put(r.getResult(), resource.get(r.getResult()) - amount);
+                amount = 0;
+            } else {
+                amount -= resource.get(r.getResult());
+                resource.remove(r.getResult());
+            }
+        }
+
+        if (amount > 0) {
+            int recipeCrafts = amount % r.getResAmount() == 0 ? amount / r.getResAmount() : amount / r.getResAmount() + 1;
+
+            if (r.getIngredients().size() == 1 && r.getIngredients().get(0).getKey().equals("ORE")) {
+                if (((long) (r.getIngredients().get(0).getValue() * recipeCrafts + usedOre)) < 1000000000000L) {
+                    usedOre += r.getIngredients().get(0).getValue() * recipeCrafts;
+                } else {
+                    isDone = true;
+                    return;
+                }
+            } else {
+                for (Pair<String, Integer> p : r.getIngredients()) {
+                    craftRecipeWithLimitedResources(resource, recipes.get(p.getKey()), recipeCrafts * p.getValue());
+                }
+            }
+
+            if ((r.getResAmount() * recipeCrafts) != amount) {
+                int tooMuch = (r.getResAmount() * recipeCrafts) - amount;
+
+                if (resource.containsKey(r.getResult())) {
+                    resource.put(r.getResult(), resource.get(r.getResult()) + tooMuch);
+                } else {
+                    resource.put(r.getResult(), (long) tooMuch);
                 }
             }
         }
