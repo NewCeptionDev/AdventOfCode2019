@@ -85,6 +85,7 @@ public class IntCodeComputer {
                     currentPosition += 4;
                     break;
                 case 3:
+                    System.out.println("Requesting Input");
                     readInput(Math.toIntExact(transformPosition(currentPosition + 1, mode1)));
                     currentPosition += 2;
                     break;
@@ -125,7 +126,7 @@ public class IntCodeComputer {
                     break;
                 default:
                     error = true;
-                    System.err.println("Catched an error!");
+                    System.err.println("Catched an error! Tried Code: " + code + " at Position " + currentPosition + ". Not parsed Code: " + getValue(currentPosition));
                     break;
 
             }
