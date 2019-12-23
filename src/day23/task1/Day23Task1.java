@@ -17,6 +17,7 @@ public class Day23Task1 {
     private Map<Integer, Long> code;
     private List<Computer> computers = new ArrayList<>();
     private boolean allUp;
+    private int currActive = 0;
 
     public Day23Task1(List<Long> intcode) {
         this.code = new HashMap<>();
@@ -30,16 +31,15 @@ public class Day23Task1 {
             computers.add(c);
         }
 
-        for (int i = 0; i < computers.size(); i++) {
-            Thread t = new Thread(computers.get(i));
-            t.start();
-            System.out.println("Started " + i);
-        }
-
-        allUp = true;
+        nextComputer();
     }
 
-    private class Computer implements Runnable {
+    public void nextComputer() {
+        computers.get(currActive).run();
+        currActive = currActive == 49 ? 0 : currActive + 1;
+    }
+
+    private class Computer {
         private IntCodeComputer nic;
         public Queue<Package> input;
 
@@ -53,43 +53,39 @@ public class Day23Task1 {
             this.input = new LinkedList<>();
         }
 
-        @Override
         public void run() {
             nic.processCode();
-            System.out.println("isRealDone" + nic.isRealDone());
-            while (!nic.isRealDone() && allUp) {
-                List<Long> out = nic.getOutputs();
+            List<Long> out = nic.getOutputs();
 
-                if (out.size() > 0) {
-                    System.out.println("Got outputs");
-                    int destination = Math.toIntExact(out.get(0));
-                    long x = out.get(1);
-                    long y = out.get(2);
+            if (out.size() > 0) {
+                int destination = Math.toIntExact(out.get(0));
+                long x = out.get(1);
+                long y = out.get(2);
 
-                    Package p = new Package(x, y);
+                Package p = new Package(x, y);
 
-                    if (destination == 255) {
-                        System.out.println("GOT Package to 255: " + x + ", " + y);
-                        return;
-                    }
-
-                    computers.get(destination).input.add(p);
-                    System.out.println("Send Package to " + destination + " with " + x + ", " + y);
+                if (destination == 255) {
+                    System.out.println("GOT Package to 255: " + x + ", " + y);
+                    return;
                 }
 
-                List<Long> newInput = new ArrayList<>();
-                if (input.size() > 0) {
-                    System.out.println("Got package");
-                    Package p = input.remove();
-                    newInput.add(p.getX());
-                    newInput.add(p.getY());
-                } else {
-                    System.out.println("no package");
-                    newInput.add(-1L);
-                }
-
-                nic.updateInputs(newInput);
+                nic.refreshOutput();
+                computers.get(destination).input.add(p);
+                System.out.println("Send Package to " + destination + " with " + x + ", " + y);
             }
+
+            List<Long> newInput = new ArrayList<>();
+            if (input.size() > 0) {
+                System.out.println("Got package");
+                Package p = input.remove();
+                newInput.add(p.getX());
+                newInput.add(p.getY());
+            } else {
+                newInput.add(-1L);
+            }
+
+            nic.updateInputs(newInput);
+            nextComputer();
         }
     }
 
