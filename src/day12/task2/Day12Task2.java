@@ -1,18 +1,17 @@
 package day12.task2;
 
-import javafx.util.Pair;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Day12Task2 {
 
-    //TODO
     private List<Moon> moons = new ArrayList<>();
-    private List<Pair<Moon, Moon>> moonPairs = new ArrayList<>();
 
     public static void main(String[] args) {
         try {
@@ -26,14 +25,52 @@ public class Day12Task2 {
                 line = reader.readLine();
             }
 
-            new Day12Task2(lines.stream().toArray(String[]::new), 1000);
+            new Day12Task2(lines.stream().toArray(String[]::new));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
-    public Day12Task2(String[] moons, int steps) {
+    private List<Integer> updateVelocities(List<Integer> velocities, List<Integer> positions) {
+        List<Integer> updatedVelocities = new ArrayList<>(velocities);
+
+        for(int i = 0; i < velocities.size(); i++) {
+            for(int j = i + 1; j < velocities.size(); j++) {
+                if(positions.get(i) > positions.get(j)) {
+                    updatedVelocities.set(i, updatedVelocities.get(i) - 1);
+                    updatedVelocities.set(j,  updatedVelocities.get(j) + 1);
+                } else if(positions.get(i) < positions.get(j)){
+                    updatedVelocities.set(i, updatedVelocities.get(i) + 1);
+                    updatedVelocities.set(j,  updatedVelocities.get(j) - 1);
+                }
+            }
+        }
+
+        return updatedVelocities;
+    }
+
+    private List<Integer> updatePositions(List<Integer> positions, List<Integer> velocities) {
+        List<Integer> newPositions = new ArrayList<>(positions);
+
+        for(int i = 0; i < positions.size(); i++) {
+            newPositions.set(i, newPositions.get(i) + velocities.get(i));
+        }
+
+        return newPositions;
+    }
+
+    private boolean matchesStartState(List<Moon> moons, List<Integer> moonPositionsForDimension, List<Integer> velocitiesForDimension, int dimension) {
+        boolean matches = true;
+
+        for(int i = 0; i < moons.size() && matches; i++) {
+            matches = moons.get(i).dimensions[dimension] == moonPositionsForDimension.get(i) && moons.get(i).velocityDimensions[dimension] == velocitiesForDimension.get(i);
+        }
+
+        return matches;
+    }
+
+    public Day12Task2(String[] moons) {
 
         for (String s : moons) {
             String withoutBrackets = s.substring(1, s.length() - 1);
@@ -59,125 +96,85 @@ public class Day12Task2 {
             this.moons.add(new Moon(x, y, z));
         }
 
-        for (int i = 0; i < this.moons.size(); i++) {
-            for (int j = i + 1; j < this.moons.size(); j++) {
-                moonPairs.add(new Pair<>(this.moons.get(i), this.moons.get(j)));
+        int[] stepsPerDimension = new int[3];
+
+        for(int i = 0; i < stepsPerDimension.length; i++) {
+            int finalI = i;
+            List<Integer> moonPositionsForDim = this.moons.stream().map(moon -> moon.getDimensions()[finalI]).collect(
+                    Collectors.toList());
+            List<Integer> velocityForDim = this.moons.stream().map(moon -> moon.velocityDimensions[finalI]).collect(
+                    Collectors.toList());
+
+            do {
+                velocityForDim = updateVelocities(velocityForDim, moonPositionsForDim);
+                moonPositionsForDim = updatePositions(moonPositionsForDim, velocityForDim);
+
+                stepsPerDimension[i] += 1;
+
+            } while (!matchesStartState(this.moons, moonPositionsForDim, velocityForDim, i));
+        }
+
+        System.out.println(calculateLeastCommonMultiple(stepsPerDimension));
+    }
+
+    private List<Integer> getPrimeFactors(int n) {
+        int i = 2;
+        List<Integer> factors = new ArrayList<>();
+
+        while(i * i <= n) {
+            if(n % i != 0) {
+                i++;
+            } else {
+                n = Math.floorDiv(n, i);
+                factors.add(i);
             }
         }
 
-        System.out.println("Moon Pairs: " + moonPairs.size());
-
-        long step = 0;
-        boolean allFirstPositions = false;
-
-        while (!allFirstPositions) {
-
-            /*System.out.println("After " + step + " Steps:");
-            for(Moon m : this.moons){
-                m.print();
-            }*/
-
-            for (Pair<Moon, Moon> p : moonPairs) {
-                p.getKey().changeVelocity(p.getValue());
-                p.getValue().changeVelocity(p.getKey());
-            }
-
-            for (Moon m : this.moons) {
-                m.move();
-            }
-
-            boolean testingPositions = true;
-
-            for (Moon m : this.moons) {
-                testingPositions &= m.firstPosition();
-            }
-
-            allFirstPositions = testingPositions;
-
-            step++;
+        if(n > 1) {
+            factors.add(n);
         }
 
-        System.out.println("First Positions after " + step + "Steps");
+        return factors;
+    }
+
+    public long calculateLeastCommonMultiple(int[] steps) {
+        List<List<Integer>> primeFactorsPerDimension = new ArrayList<>();
+
+        for (int step : steps) {
+            primeFactorsPerDimension.add(getPrimeFactors(step));
+        }
+
+        Set<Integer> allPrimeFactors = new HashSet<>();
+
+        for (List<Integer> integers : primeFactorsPerDimension) {
+            allPrimeFactors.addAll(integers);
+        }
+
+        long lcm = 1;
+
+        for(int prime : allPrimeFactors) {
+            List<Integer> occurrencesOfPrimeSorted = primeFactorsPerDimension.stream().map(dimension -> (int) dimension.stream()
+                    .filter(primesOfDimension -> primesOfDimension == prime).count()).sorted(Integer::compareTo).collect(Collectors.toList());
+            int amount = occurrencesOfPrimeSorted.get(occurrencesOfPrimeSorted.size() - 1);
+            lcm *= Math.pow(prime, amount);
+        }
+
+        return lcm;
     }
 
     private class Moon {
-        int x;
-        int y;
-        int z;
+        int[] dimensions = new int[3];
 
-        int initialx;
-        int initialy;
-        int initialz;
-
-        int velx;
-        int vely;
-        int velz;
+        int[] velocityDimensions = new int[3];
 
         public Moon(int x, int y, int z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-
-            this.initialx = x;
-            this.initialy = y;
-            this.initialz = z;
+            dimensions[0] = x;
+            dimensions[1] = y;
+            dimensions[2] = z;
         }
 
-        public void move() {
-            x += velx;
-            y += vely;
-            z += velz;
-        }
-
-        public void changeVelocity(Moon m) {
-            if (x < m.getX()) {
-                velx += 1;
-            } else if (x > m.getX()) {
-                velx -= 1;
-            }
-
-            if (y < m.getY()) {
-                vely += 1;
-            } else if (y > m.getY()) {
-                vely -= 1;
-            }
-
-            if (z < m.getZ()) {
-                velz += 1;
-            } else if (z > m.getZ()) {
-                velz -= 1;
-            }
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        public int getZ() {
-            return z;
-        }
-
-        public long calculateEnergy() {
-            long pot = Math.abs(x) + Math.abs(y) + Math.abs(z);
-            long kin = Math.abs(velx) + Math.abs(vely) + Math.abs(velz);
-
-            System.out.println("Calculated Energy: " + pot * kin);
-
-            return pot * kin;
-        }
-
-        public void print() {
-            System.out.println(
-                    "pos=<x=" + x + ", y=" + y + ", z=" + z + ">, vel=<x=" + velx + ", y=" + vely
-                            + ", z=" + velz + ">");
-        }
-
-        public boolean firstPosition() {
-            return initialx == x && initialy == y && initialz == z;
+        public int[] getDimensions() {
+            return dimensions;
         }
     }
 }

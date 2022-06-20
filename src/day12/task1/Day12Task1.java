@@ -64,17 +64,9 @@ public class Day12Task1 {
             }
         }
 
-        System.out.println("Moon Pairs: " + moonPairs.size());
-
         int step = 0;
 
         while(step < steps){
-
-            /*System.out.println("After " + step + " Steps:");
-            for(Moon m : this.moons){
-                m.print();
-            }*/
-
             for (Pair<Moon, Moon> p : moonPairs){
                 p.getKey().changeVelocity(p.getValue());
                 p.getValue().changeVelocity(p.getKey());
@@ -152,8 +144,6 @@ public class Day12Task1 {
         public long calculateEnergy(){
             long pot = Math.abs(x) + Math.abs(y) + Math.abs(z);
             long kin = Math.abs(velx) + Math.abs(vely) + Math.abs(velz);
-
-            System.out.println("Calculated Energy: " + pot * kin);
 
             return pot * kin;
         }
