@@ -1,12 +1,18 @@
 package day4.task2;
 
+import util.InputReader;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class Day4Task2 {
 
     public static void main(String[] args) {
-        System.out.println("Possible Solutions: " + calculate(273025, 767253).size());
+        String input = InputReader.read("src/day4/task1/input.txt").get(0);
+
+        int lowerBound = Integer.parseInt(input.split("-")[0]);
+        int upperBound = Integer.parseInt(input.split("-")[1]);
+        System.out.println("Possible Solutions: " + calculate(lowerBound, upperBound).size());
     }
 
     public static List<Integer> calculate(int lower, int upper) {

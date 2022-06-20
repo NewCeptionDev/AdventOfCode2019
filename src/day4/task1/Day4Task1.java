@@ -1,5 +1,7 @@
 package day4.task1;
 
+import util.InputReader;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +10,12 @@ public class Day4Task1 {
     public static void main(String[] args) {
         List<Integer> allNumbers = new ArrayList<>();
 
-        for(int i =  273025; i <= 767253; i++){
+        String input = InputReader.read("src/day4/task1/input.txt").get(0);
+
+        int lowerBound = Integer.parseInt(input.split("-")[0]);
+        int upperBound = Integer.parseInt(input.split("-")[1]);
+
+        for(int i =  lowerBound; i <= upperBound; i++){
             allNumbers.add(i);
         }
 
