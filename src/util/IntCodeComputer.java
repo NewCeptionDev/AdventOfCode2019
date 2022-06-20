@@ -24,19 +24,21 @@ public class IntCodeComputer {
 
     public void updateInputs(List<Long> inputs) {
         this.inputs = inputs;
-        outputs = new ArrayList<>();
         currentInput = 0;
         done = false;
-        processCode();
     }
 
-    public void continueProcess(){
+    public void refreshOutput(){
+        outputs = new ArrayList<>();
+    }
+
+    public void continueProcess() {
         done = false;
         outputs = new ArrayList<>();
         processCode();
     }
 
-    public void changeStepsTillStop(int i){
+    public void changeStepsTillStop(int i) {
         this.stopAfterOutputs = i;
     }
 
@@ -86,12 +88,15 @@ public class IntCodeComputer {
                     break;
                 case 3:
                     readInput(Math.toIntExact(transformPosition(currentPosition + 1, mode1)));
-                    currentPosition += 2;
+                    if (!done) {
+                        currentPosition += 2;
+                    }
                     break;
                 case 4:
+                    System.out.println("Trying to Output");
                     writeOutput(Math.toIntExact(transformPosition(currentPosition + 1, mode1)));
                     currentPosition += 2;
-                    if(stopAfterOutputs == outputs.size()) {
+                    if (stopAfterOutputs == outputs.size()) {
                         done = true;
                     }
                     break;
@@ -125,7 +130,7 @@ public class IntCodeComputer {
                     break;
                 default:
                     error = true;
-                    System.err.println("Catched an error!");
+                    System.err.println("Catched an error! Tried Code: " + code + " at Position " + currentPosition + ". Not parsed Code: " + getValue(currentPosition));
                     break;
 
             }
@@ -141,9 +146,12 @@ public class IntCodeComputer {
     }
 
     private void readInput(int pos) {
-        setPosition(pos, inputs.get(currentInput));
-        if(currentInput < inputs.size()-1){
+
+        if (inputs.size() > currentInput) {
+            setPosition(pos, inputs.get(currentInput));
             currentInput++;
+        } else {
+            done = true;
         }
     }
 
