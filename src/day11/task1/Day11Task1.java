@@ -1,7 +1,7 @@
 package day11.task1;
 
-import javafx.util.Pair;
-import util.IntCodeComputer;
+import util.IntCode;
+import util.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class Day11Task1 {
 
-    Map<Pair<Integer, Integer>, Integer> area = new HashMap<>();
+    Map<Integer, Map<Integer, Integer>> area = new HashMap<>();
 
     public static void main(String[] args) {
         try {
@@ -30,38 +30,36 @@ public class Day11Task1 {
     }
 
     public Day11Task1(List<Long> in) {
-        Map<Integer, Long> input = new HashMap<>();
-        for (int i = 0; i < in.size(); i++) {
-            input.put(i, in.get(i));
-        }
+        IntCode intCode = new IntCode(in);
 
-        List<Long> inputs = new ArrayList<>();
-        inputs.add(0L);
-
-        IntCodeComputer i = new IntCodeComputer(input, inputs);
         Pair<Integer, Integer> currentPosition = new Pair<>(0,0);
         List<Pair<Integer, Integer>> alreadyPainted = new ArrayList<>();
         int currDirection = 0; // 0 == UP - 1 == RIGHT - 2 == DOWN - 3 == LEFT
 
-        while (!i.isRealDone()) {
-            inputs.set(0, (long) getField(currentPosition.getKey(), currentPosition.getValue()));
-            i.updateInputs(inputs);
-            i.processCode();
+        Long result = 0L;
+
+        while (result != null) {
+            intCode.addToInput(getField(currentPosition.getKey(), currentPosition.getValue()));
+            result = intCode.runCode(true);
             int outOne = 0;
-            if (!i.isRealDone()) {
-                outOne = Math.toIntExact(i.getOutputs().get(0));
-                i.updateInputs(inputs);
-                i.processCode();
+            if (result != null) {
+                outOne = Math.toIntExact(result);
+                result = intCode.runCode(true);
             }
-            if (!i.isRealDone()) {
-                int outTwo = Math.toIntExact(i.getOutputs().get(0));
-                area.put(currentPosition, outOne);
+            if (result != null) {
+                int outTwo = Math.toIntExact(result);
+                if(!area.containsKey(currentPosition.getValue())) {
+                    area.put(currentPosition.getValue(), new HashMap<>());
+                }
+                area.get(currentPosition.getValue()).put(currentPosition.getKey(), outOne);
 
                 boolean alreadyPaintedBefore = false;
 
                 for(Pair<Integer, Integer> p : alreadyPainted){
-                    if(p.getKey().equals(currentPosition.getKey()) && p.getValue().equals(currentPosition.getValue())){
+                    if (p.getKey().equals(currentPosition.getKey()) && p.getValue()
+                            .equals(currentPosition.getValue())) {
                         alreadyPaintedBefore = true;
+                        break;
                     }
                 }
 
@@ -98,6 +96,6 @@ public class Day11Task1 {
     }
 
     private int getField(int x, int y) {
-        return area.getOrDefault(new Pair<>(x, y), 0);
+        return area.getOrDefault(y, new HashMap<>()).getOrDefault(x, 0);
     }
 }

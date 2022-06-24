@@ -1,11 +1,12 @@
 package day9.task2;
 
-import util.IntCodeComputer;
+import util.IntCode;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class Day9Task2 {
@@ -27,19 +28,9 @@ public class Day9Task2 {
     }
 
     public Day9Task2(List<Long> in) {
-        Map<Integer, Long> input = new HashMap<>();
-        for (int i = 0; i < in.size(); i++) {
-            input.put(i, in.get(i));
-        }
-
-        List<Long> inputs = new ArrayList<>();
-        inputs.add(2L);
-
-        IntCodeComputer i = new IntCodeComputer(input, inputs);
-
-        i.processCode();
-
-        System.out.println(i.getOutputs());
+        IntCode intCode = new IntCode(in);
+        intCode.addToInput(2);
+        intCode.runCode(false);
     }
 
 

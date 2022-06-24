@@ -17,7 +17,7 @@ cd AdventOfCode2019
 Dependencies:
 
 ```
-Java 8
+Java 18
 ``` 
 
 

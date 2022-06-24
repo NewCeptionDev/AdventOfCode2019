@@ -1,6 +1,6 @@
 package day18.task1;
 
-import javafx.util.Pair;
+import util.Pair;
 import util.InputReader;
 
 import java.util.*;

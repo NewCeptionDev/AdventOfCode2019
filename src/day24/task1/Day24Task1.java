@@ -1,6 +1,6 @@
 package day24.task1;
 
-import javafx.util.Pair;
+import util.Pair;
 import util.InputReader;
 
 import java.util.ArrayList;

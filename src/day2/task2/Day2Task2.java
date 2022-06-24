@@ -1,29 +1,29 @@
 package day2.task2;
 
-import day2.task1.Day2Task1;
-import javafx.util.Pair;
 import util.InputReader;
+import util.IntCode;
+import util.Pair;
 
 import java.util.Arrays;
 
 public class Day2Task2 {
 
-    private final Integer[] input =
+    private final Long[] input =
             Arrays.stream(InputReader.read("src/day2/task1/input.txt").get(0).trim().split(","))
-                    .map(Integer::parseInt).toArray(Integer[]::new);
+                    .map(Long::parseLong).toArray(Long[]::new);
 
     public static void main(String[] args) {
-        Integer searching = 19690720;
+        long searching = 19690720;
 
         new Day2Task2(searching);
     }
 
-    public Day2Task2(Integer searching) {
+    public Day2Task2(long searching) {
 
         boolean found = false;
-        for (int i = 0; i <= 99 && !found; i++) {
-            for (int j = 0; j <= 99 && !found; j++) {
-                if (testPair(new Pair<>(i, j)).equals(searching)) {
+        for (long i = 0; i <= 99 && !found; i++) {
+            for (long j = 0; j <= 99 && !found; j++) {
+                if (testPair(new Pair<>(i, j)) == searching) {
                     System.out.println("Correct Pair found: (" + i + ", " + j + ")");
                     found = true;
                 }
@@ -31,13 +31,14 @@ public class Day2Task2 {
         }
     }
 
-    private Integer testPair(Pair<Integer, Integer> p) {
-        Integer[] test = input.clone();
+    private long testPair(Pair<Long, Long> p) {
+        Long[] test = input.clone();
         test[1] = p.getKey();
         test[2] = p.getValue();
-        Day2Task1 t = new Day2Task1(test);
+        IntCode intCode = new IntCode(Arrays.asList(test));
+        intCode.runCode(false);
 
-        return t.processCode().get(0);
+        return intCode.getMemory().get(0L);
     }
 
 }

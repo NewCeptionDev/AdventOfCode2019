@@ -1,6 +1,6 @@
 package day10.task2;
 
-import javafx.util.Pair;
+import util.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

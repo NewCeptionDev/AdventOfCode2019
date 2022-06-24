@@ -1,10 +1,13 @@
 package day13.task1;
 
-import javafx.util.Pair;
 import util.InputReader;
-import util.IntCodeComputer;
+import util.IntCode;
+import util.Pair;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class Day13Task1 {
@@ -12,28 +15,25 @@ public class Day13Task1 {
     public static void main(String[] args) {
         List<String> input = InputReader.read("src/day13/task1/input.txt");
 
-        new Day13Task1(Arrays.stream(input.get(0).split(",")).map(Integer::parseInt).collect(
+        new Day13Task1(Arrays.stream(input.get(0).split(",")).map(Long::parseLong).collect(
                 Collectors.toList()));
     }
 
-    public Day13Task1(List<Integer> input){
-        Map<Integer, Long> in = new HashMap<>();
-        for(int i = 0; i < input.size(); i++){
-            in.put(i, (long) input.get(i));
-        }
-
-        IntCodeComputer c = new IntCodeComputer(in, new ArrayList<>());
+    public Day13Task1(List<Long> input){
+        IntCode intCode = new IntCode(input);
 
         Set<Pair<Integer, Integer>> blockPositions = new HashSet<>();
 
-        while(!c.isRealDone()){
-            c.continueProcess();
-            if (!c.isRealDone()) {
-                int x = Math.toIntExact(c.getOutputs().get(0));
-                c.continueProcess();
-                int y = Math.toIntExact(c.getOutputs().get(0));
-                c.continueProcess();
-                int type = Math.toIntExact(c.getOutputs().get(0));
+        Long result = 0L;
+
+        while(result != null){
+            result = intCode.runCode(true);
+            if (result != null) {
+                int x = Math.toIntExact(result);
+                result = intCode.runCode(true);
+                int y = Math.toIntExact(result);
+                result = intCode.runCode(true);
+                int type = Math.toIntExact(result);
 
                 if(type == 2){
                     blockPositions.add(new Pair<>(x,y));

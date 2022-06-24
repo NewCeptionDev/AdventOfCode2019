@@ -1,7 +1,7 @@
 package day17.task1;
 
 import util.InputReader;
-import util.IntCodeComputer;
+import util.IntCode;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,7 +13,7 @@ public class Day17Task1 {
 
         String[] splitted = inputString.get(0).split(",");
 
-        new Day17Task1(Arrays.stream(splitted).map(Integer::parseInt).collect(Collectors.toList()));
+        new Day17Task1(Arrays.stream(splitted).map(Long::parseLong).collect(Collectors.toList()));
     }
 
     List<String> stringMap = new ArrayList<>();
@@ -21,22 +21,16 @@ public class Day17Task1 {
     StringBuilder currLine = new StringBuilder();
 
 
-    public Day17Task1(List<Integer> in){
-        Map<Integer, Long> computerInput = new HashMap<>();
+    public Day17Task1(List<Long> in){
+        IntCode intCode = new IntCode(in);
 
-        for(int i = 0; i < in.size(); i++){
-            computerInput.put(i, (long) in.get(i));
-        }
+        Long result = 0L;
 
+        while (result != null){
+            result = intCode.runCode(true);
 
-        IntCodeComputer c = new IntCodeComputer(computerInput, new ArrayList<>());
-
-        while (!c.isRealDone()){
-            c.updateInputs(new ArrayList<>());
-            c.processCode();
-
-            if (!c.isRealDone()) {
-                int output = Math.toIntExact(c.getOutputs().get(0));
+            if (result != null) {
+                int output = Math.toIntExact(result);
 
                 if(output == 10){
                     stringMap.add(currLine.toString());

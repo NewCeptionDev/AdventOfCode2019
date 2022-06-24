@@ -1,19 +1,17 @@
 package day11.task2;
 
-import javafx.util.Pair;
-import util.IntCodeComputer;
+import util.IntCode;
+import util.Pair;
 
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Collectors;
 
 public class Day11Task2 {
 
-    Map<Pair<Integer, Integer>, Integer> area = new HashMap<>();
+    Map<Integer, Map<Integer, Integer>> area = new HashMap<>();
 
     public static void main(String[] args) {
         try {
@@ -73,28 +71,33 @@ public class Day11Task2 {
     }
 
     public Day11Task2(List<Long> in) {
-        Map<Integer, Long> input = new HashMap<>();
-        for (int i = 0; i < in.size(); i++) {
-            input.put(i, in.get(i));
-        }
-
         List<Long> inputs = new ArrayList<>();
         inputs.add(1L);
 
-        IntCodeComputer i = new IntCodeComputer(input, inputs);
-        i.changeStepsTillStop(2);
+        IntCode intCode = new IntCode(in);
+        //        i.changeStepsTillStop(2);
         Pair<Integer, Integer> currentPosition = new Pair<>(50, 50);
-        area.put(currentPosition, 1);
+
+        if (!area.containsKey(currentPosition.getValue())) {
+            area.put(currentPosition.getValue(), new HashMap<>());
+        }
+        area.get(currentPosition.getValue()).put(currentPosition.getKey(), 1);
         Direction direction = Direction.UP;
 
-        while (!i.isRealDone()) {
-            inputs.set(0, getField(currentPosition.getKey(), currentPosition.getValue()));
-            i.updateInputs(inputs);
+        Long result = 0L;
+
+        while (result != null) {
+            intCode.addToInput(getField(currentPosition.getKey(), currentPosition.getValue()));
             int outOne = -1;
-            if (!i.isRealDone()) {
-                outOne = Math.toIntExact(i.getOutputs().get(0));
-                int outTwo = Math.toIntExact(i.getOutputs().get(1));
-                area.put(currentPosition, outOne);
+            result = intCode.runCode(true);
+            if (result != null) {
+                outOne = Math.toIntExact(result);
+                result = intCode.runCode(true);
+                int outTwo = Math.toIntExact(result);
+                if (!area.containsKey(currentPosition.getValue())) {
+                    area.put(currentPosition.getValue(), new HashMap<>());
+                }
+                area.get(currentPosition.getValue()).put(currentPosition.getKey(), outOne);
 
                 direction = direction.turn(outTwo);
 
@@ -104,8 +107,8 @@ public class Day11Task2 {
         print();
     }
 
-    private long getField(int y, int x) {
-        return area.getOrDefault(new Pair<>(y, x), 0);
+    private int getField(int x, int y) {
+        return area.getOrDefault(y, new HashMap<>()).getOrDefault(x, 0);
     }
 
     private void print() {
@@ -115,23 +118,24 @@ public class Day11Task2 {
         int minX = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE;
 
-        for (Pair<Integer, Integer> p : area.keySet()) {
-            if (p.getKey() < minY) {
-                minY = p.getKey();
-            } else if (p.getKey() > maxY) {
-                maxY = p.getKey();
+        for (int y : area.keySet()) {
+            if (y < minY) {
+                minY = y;
+            } else if (y > maxY) {
+                maxY = y;
             }
-
-            if (p.getValue() < minX) {
-                minX = p.getValue();
-            } else if (p.getValue() > maxX) {
-                maxX = p.getValue();
+            for (int x : area.get(y).keySet()) {
+                if (x < minX) {
+                    minX = x;
+                } else if (x > maxX) {
+                    maxX = x;
+                }
             }
         }
 
-        for (int y = minY; y <= maxY; y++) {
-            for (int x = minX; x <= maxX; x++) {
-                long field = getField(y, x);
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                long field = getField(x, y);
                 if (field == 1L) {
                     System.out.print("#");
                 } else {

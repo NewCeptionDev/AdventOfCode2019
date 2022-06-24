@@ -1,7 +1,7 @@
 package day3.task2;
 
 import day3.task1.Day3Task1;
-import javafx.util.Pair;
+import util.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
