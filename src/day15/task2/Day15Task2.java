@@ -1,4 +1,4 @@
-package day15.task1;
+package day15.task2;
 
 import util.InputReader;
 import util.IntCode;
@@ -7,17 +7,17 @@ import util.Pair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class Day15Task1 {
+public class Day15Task2 {
 
     public static void main(String[] args) {
         List<String> in = InputReader.read("src/day15/task1/input.txt");
-        new Day15Task1(Arrays.stream(in.get(0).split(",")).map(Long::parseLong)
+        new Day15Task2(Arrays.stream(in.get(0).split(",")).map(Long::parseLong)
                 .collect(Collectors.toList()));
     }
 
     private Map<Integer, Map<Integer, String>> map = new HashMap<>();
 
-    public Day15Task1(List<Long> input) {
+    public Day15Task2(List<Long> input) {
         IntCode intCode = new IntCode(input);
 
         Pair<Integer, Integer> position = new Pair<>(0, 0);
@@ -27,6 +27,8 @@ public class Day15Task1 {
         int moves = 0;
 
         Long result = 0L;
+
+        Pair<Integer, Integer> oxygenPosition = null;
 
         // Let robot run for a while to make sure whole map is discovered
         // Always sticking to right wall to make sure we do not get stuck
@@ -71,7 +73,7 @@ public class Day15Task1 {
                 }
 
             } else if(result == 2L) {
-                Pair<Integer, Integer> oxygenPosition = getPositionInDirection(position, direction);
+                oxygenPosition = getPositionInDirection(position, direction);
                 if (!map.containsKey(oxygenPosition.getValue())) {
                     map.put(oxygenPosition.getValue(), new HashMap<>());
                 }
@@ -89,11 +91,14 @@ public class Day15Task1 {
 
         List<Pair<Integer, Integer>> possiblePositions = new ArrayList<>();
         List<Pair<Integer, Integer>> visited = new ArrayList<>();
-        possiblePositions.add(new Pair<>(0, 0));
-        int shortestRangeToOxygen = -1;
+        if(oxygenPosition != null) {
+            possiblePositions.add(oxygenPosition);
+        } else {
+            System.err.println("This should not happen");
+        }
         int steps = 0;
 
-        while (shortestRangeToOxygen == -1) {
+        while (possiblePositions.size() > 0) {
             List<Pair<Integer, Integer>> newPossiblePositions = new ArrayList<>();
             visited.addAll(possiblePositions);
             steps++;
@@ -106,9 +111,6 @@ public class Day15Task1 {
                                                 || !visitedPosition.getValue()
                                                 .equals(neighbour.getValue()))).toList();
                 for(Pair<Integer, Integer> neighbour : neighbourPositions) {
-                    if(map.getOrDefault(neighbour.getValue(), new HashMap<>()).getOrDefault(neighbour.getKey(), "?").equals("O")) {
-                        shortestRangeToOxygen = steps;
-                    }
                     if (map.getOrDefault(neighbour.getValue(), new HashMap<>()).getOrDefault(neighbour.getKey(), "?").equals(".")) {
                         if(newPossiblePositions.stream().allMatch(added ->
                                 !added.getValue().equals(neighbour.getValue()) || !added.getKey()
@@ -121,7 +123,7 @@ public class Day15Task1 {
             possiblePositions = newPossiblePositions;
         }
 
-        System.out.println("Shortest distance: " + shortestRangeToOxygen);
+        System.out.println("Minutes to fill complete area: " + (steps - 1));
     }
 
     private Pair<Integer, Integer> getPositionInDirection(Pair<Integer, Integer> currentPosition, int direction) {
