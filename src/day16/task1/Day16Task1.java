@@ -18,7 +18,7 @@ public class Day16Task1 {
             BufferedReader reader = new BufferedReader(new FileReader("src/day16/task1/input.txt"));
             String line = reader.readLine();
 
-            Day16Task1 test = new Day16Task1(line);
+            Day16Task1 day16 = new Day16Task1(line);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -40,7 +40,7 @@ public class Day16Task1 {
             count++;
         }
 
-        System.out.println(inputs);
+        System.out.println(inputs.subList(0, 8));
     }
 
     public List<Integer> fft() {
@@ -64,27 +64,29 @@ public class Day16Task1 {
     }
 
     public int applyPattern(int number) {
-        int currPatternPos = 0;
-        int sum = 0;
-        int counter = 1;
+        List<Integer> multiByOne = new ArrayList<>();
+        List<Integer> multiByMinusOne = new ArrayList<>();
 
-        for (int i = 0; i < inputs.size(); i++) {
-            if (counter == number) {
-                counter = 0;
-                currPatternPos++;
+        int nextOneArray = number - 1;
+        int nextMinusArray = (number * 2) + (number - 1);
+
+        for(int i = 0; i < inputs.size(); i++) {
+            if(i >= nextOneArray && i < nextOneArray + number) {
+                multiByOne.add(inputs.get(i));
             }
-
-            if (currPatternPos == pattern.size()) {
-                currPatternPos = 0;
+            if(i >= nextMinusArray && i < nextMinusArray + number) {
+                multiByMinusOne.add(inputs.get(i));
             }
-
-            if (counter < number) {
-                counter++;
+            if(i == nextOneArray + number - 1) {
+                nextOneArray += number * 4;
+                i += number;
             }
-
-            sum += pattern.get(currPatternPos) * inputs.get(i);
+            if(i == nextMinusArray + number - 1) {
+                nextMinusArray += number * 4;
+                i += number;
+            }
         }
 
-        return sum;
+        return multiByOne.stream().reduce(0, Integer::sum) - multiByMinusOne.stream().reduce(0, Integer::sum);
     }
 }
