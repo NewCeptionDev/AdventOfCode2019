@@ -54,6 +54,7 @@ public class Day17Task1 {
             char[] chars = stringMap.get(i).toCharArray();
 
             map[i] = chars;
+            System.out.println(chars);
         }
 
     }
