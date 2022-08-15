@@ -1,7 +1,7 @@
 package day18.task1;
 
-import util.Pair;
 import util.InputReader;
+import util.Pair;
 
 import java.util.*;
 
@@ -13,279 +13,241 @@ public class Day18Task1 {
         new Day18Task1(in);
     }
 
-    private char[][] field;
-    private Map<Character, Pair<Integer, Integer>> keys;
-    private Map<Character, List<Pair<Integer, Integer>>> currentBestWay = new HashMap<>();
-    private Map<Pair<Integer, Integer>, Pair<Map<Character, Set<Character>>, Map<Character, List<Pair<Integer, Integer>>>>> savedBestWays = new HashMap<>();
+    private Map<Integer, Map<Integer, Character>> map;
 
-    public Day18Task1(List<String> in) {
-        field = new char[in.size()][];
-        for (int i = 0; i < in.size(); i++) {
-            field[i] = in.get(i).toCharArray();
-        }
+    public interface Link {
+        boolean allClear(List<Character> openDoors);
 
-        keys = getAllKeys();
-
-        print();
-
-        for(Character c : keys.keySet()){
-            System.out.println("Char " + c + ": " + keys.get(c));
-        }
-
-        System.out.println(simulateRun(keys.keySet(), new ArrayList<>(), getStartPos(), 0));
+        int getDistance();
     }
 
-    private int simulateRun(Set<Character> toDo, List<Character> collected,
-            Pair<Integer, Integer> pos, int posMoved) {
-        //System.out.println("New Simulation Step. TODO Size: " + toDo.size());
-        //System.out.println("Current Steps: " + posMoved);
+    private Map<Character, Key> keys = new HashMap<>();
 
-        //TODO Save old Calculations to reuse
-        int minSteps = Integer.MAX_VALUE;
-        if (toDo.size() > 0) {
-            Map<Character, Set<Character>> possible;
-            Map<Character, List<Pair<Integer, Integer>>> bestWaysForMethod;
-            Pair<Map<Character, Set<Character>>, Map<Character, List<Pair<Integer, Integer>>>> oldMoves = getValuesFromPair(pos);
-            if (oldMoves == null) {
-                possible = calculateLocksInFrontofKeys(pos, toDo);
-                bestWaysForMethod = new HashMap<>(currentBestWay);
-                savedBestWays.put(new Pair<>(pos.getKey(), pos.getValue()), new Pair<>(possible, bestWaysForMethod));
-                System.out.println("explored new");
-            } else {
-                System.out.println("Found old State");
-                possible = oldMoves.getKey();
-                for(Character c : collected){
-                   possible.remove((char)(c+32));
-                }
-                bestWaysForMethod = oldMoves.getValue();
-            }
+    private int entranceCount = 0;
 
-            List<Character> toRemove = new ArrayList<>();
-
-            for (Character c : possible.keySet()) {
-                for(Character col : collected){
-                    possible.get(c).remove((char)(col-32));
-                }
-
-                if (possible.get(c).size() > 0) {
-                    //System.out.println("Lock found, Removing");
-                    //System.out.println(possible.get(c));
-                    toRemove.add(c);
-                }
-            }
-
-            for(Character c : toRemove){
-                possible.remove(c);
-            }
-
-            if(possible.size() == 0){
-                //System.out.println("No possible Steps found.");
-            }
-
-            for (Character c : possible.keySet()) {
-                Set<Character> newToDo = new HashSet<>(toDo);
-                newToDo.remove(c);
-                List<Character> newCollected = new ArrayList<>(collected);
-                newCollected.addAll(getAllKeysOnWay(c, bestWaysForMethod.get(c)));
-
-                int steps = simulateRun(newToDo, newCollected, keys.get(c),
-                        posMoved + bestWaysForMethod.get(c).size());
-
-                if (minSteps > steps) {
-                    minSteps = steps;
-                }
-            }
-        } else {
-            return posMoved;
-        }
-
-        return minSteps;
+    public static boolean isKey(Character c) {
+        return Character.isLetter(c) && Character.isLowerCase(c);
     }
 
-    private Pair<Map<Character, Set<Character>>, Map<Character, List<Pair<Integer, Integer>>>> getValuesFromPair(Pair<Integer, Integer> pair){
-        for(Pair<Integer, Integer> inList : savedBestWays.keySet()){
-            if(inList.getKey().equals(pair.getKey()) && inList.getValue().equals(pair.getValue())){
-                return savedBestWays.get(inList);
+    public static boolean isDoor(Character c) {
+        return Character.isLetter(c) && Character.isUpperCase(c);
+    }
+
+    public static boolean notWall(Map<Integer, Map<Integer, Character>> map,
+            Pair<Integer, Integer> position) {
+        return map.containsKey(position.getValue()) && map.get(position.getValue())
+                .containsKey(position.getKey())
+                && map.get(position.getValue()).get(position.getKey()) != '#';
+    }
+
+    public static String positionAsString(Pair<Integer, Integer> position) {
+        return "K" + position.getKey() + "_" + position.getValue();
+    }
+
+    public static Link getLink(Map<Integer, Map<Integer, Character>> map,
+            Pair<Integer, Integer> currentPos, Pair<Integer, Integer> targetPos) {
+        List<String> visited = new ArrayList<>();
+        Queue<QueueElement> queue = new LinkedList<>();
+        queue.add(new QueueElement(currentPos, 0, new ArrayList<>()));
+
+        while (!queue.isEmpty()) {
+            QueueElement element = queue.poll();
+            visited.add(positionAsString(element.getPosition()));
+            List<Pair<Integer, Integer>> nextPositions =
+                    calculatePossibleNextPositions(element.getPosition(), map.get(0).size(),
+                            map.size()).stream()
+                            .filter(pos -> !visited.contains(positionAsString(pos)) && notWall(map,
+                                    pos)).toList();
+
+            for (Pair<Integer, Integer> nextPos : nextPositions) {
+                if (nextPos.getKey().equals(targetPos.getKey()) && nextPos.getValue()
+                        .equals(targetPos.getValue())) {
+                    return new Reachable(element.getDistance() + 1, element.getDoors());
+                }
+                Character mapElement = map.get(nextPos.getValue()).get(nextPos.getKey());
+                List<Character> newDoors = new ArrayList<>(element.getDoors());
+                if (isDoor(mapElement)) {
+                    newDoors.add(mapElement);
+                }
+                queue.add(new QueueElement(nextPos, element.getDistance() + 1, newDoors));
             }
         }
 
-        return null;
+        return new Unreachable();
     }
 
-    private List<Character> getAllKeysOnWay(char key, List<Pair<Integer, Integer>> bestWays) {
-        List<Character> keys = new ArrayList<>();
+    public static int findShortestPath(List<Character> places, Map<Character, Key> keys, List<Character> visited,
+            List<Character> robotPositions, int distance, Map<String, Integer> memory) {
+        if (places.size() == visited.size()) {
+            return distance;
+        }
+        List<Character> remaining = places.stream().filter(key -> !visited.contains(key)).toList();
+        String mk = robotPositions.stream().map(c -> c + "").reduce("", String::concat) + ":"
+                + remaining.stream().map(c -> c + "").reduce("", String::concat);
 
-        for (Pair<Integer, Integer> p : bestWays) {
-            if (isKey(p.getKey(), p.getValue())) {
-                keys.add(getField(p.getKey(), p.getValue()));
-            }
+        if (memory.containsKey(mk)) {
+            return memory.get(mk) + distance;
         }
 
-        return keys;
+        int min = Integer.MAX_VALUE;
+        for (int i = 0; i < robotPositions.size(); i++) {
+            Character curr = robotPositions.get(i);
+            Map<Character, Link> links = keys.get(curr).getLinks();
+            for (Character key : remaining.stream().filter(r -> links.get(r).allClear(visited))
+                    .toList()) {
+                List<Character> newPositions = new ArrayList<>(robotPositions);
+                newPositions.set(i, key);
+                List<Character> newVisited = new ArrayList<>(visited);
+                newVisited.add(key);
+                min = Math.min(min, findShortestPath(places, keys, newVisited, newPositions,
+                        distance + links.get(key).getDistance(), memory));
+            }
+        }
+        memory.put(mk, min - distance);
+        return min;
     }
 
-    private Map<Character, Set<Character>> calculateLocksInFrontofKeys(
-            Pair<Integer, Integer> startPos, Set<Character> toDoKeys) {
-        Map<Character, Set<Character>> possible = new HashMap<>();
-        currentBestWay = new HashMap<>();
+    public void collectKeys(List<Character> places) {
+        for (int i = 0; i < places.size(); i++) {
+            Key a = keys.get(places.get(i));
+            Character aName = places.get(i);
+            for (int j = i + 1; j < places.size(); j++) {
+                Key b = keys.get(places.get(j));
+                Character bName = places.get(j);
+                Link link = getLink(map, a.getPosition(), b.getPosition());
+                a.getLinks().put(bName, link);
+                b.getLinks().put(aName, link);
+            }
+        }
+    }
 
-        for (Character c : toDoKeys) {
-            List<Pair<Integer, Integer>> bestWay = new ArrayList<>();
-            List<Pair<List<Pair<Integer, Integer>>, Set<Character>>> possibleWays =
-                    new ArrayList<>();
-            findLocks(c, startPos, null, new ArrayList<>(), bestWay, possibleWays, new HashSet<>());
+    public Day18Task1(List<String> lines) {
+        map = parseMap(lines);
+        List<Character> places = keys.keySet().stream().sorted().toList();
+        System.out.println(places);
+        collectKeys(places);
+        List<Character> positions = new ArrayList<>();
 
-            Pair<List<Pair<Integer, Integer>>, Set<Character>> best = null;
-            for (Pair<List<Pair<Integer, Integer>>, Set<Character>> p : possibleWays) {
-                if (best == null) {
-                    best = p;
-                } else {
-                    if (best.getKey().size() > p.getKey().size()) {
-                        best = p;
-                    }
+        for (int i = 0; i < entranceCount; i++) {
+            positions.add((char) (i + '0'));
+        }
+
+        System.out.println(findShortestPath(places, keys, positions, positions, 0, new HashMap<>()));
+    }
+
+    private Map<Integer, Map<Integer, Character>> parseMap(List<String> lines) {
+        Map<Integer, Map<Integer, Character>> map = new HashMap<>();
+
+        for (int y = 0; y < lines.size(); y++) {
+            map.put(y, new HashMap<>());
+
+            for (int x = 0; x < lines.get(y).length(); x++) {
+                Character curr = lines.get(y).charAt(x);
+                map.get(y).put(x, curr);
+
+                if (isKey(curr)) {
+                    keys.put(curr, new Key(new Pair<>(x, y)));
+                } else if (curr == '@') {
+                    keys.put((char) (entranceCount + '0'), new Key(new Pair<>(x, y)));
+                    entranceCount++;
                 }
             }
-
-            possible.put(c, best.getValue());
-
-            List<Pair<Integer, Integer>> removed = best.getKey().subList(1, best.getKey().size());
-            currentBestWay.put(c,  best.getKey());
         }
+
+        return map;
+    }
+
+    private static List<Pair<Integer, Integer>> calculatePossibleNextPositions(
+            Pair<Integer, Integer> currentPosition, int maxX, int maxY) {
+        List<Pair<Integer, Integer>> possible = new ArrayList<>();
+
+        if (currentPosition.getKey() > 0) {
+            possible.add(new Pair<>(currentPosition.getKey() - 1, currentPosition.getValue()));
+        }
+
+        if (currentPosition.getValue() > 0) {
+            possible.add(new Pair<>(currentPosition.getKey(), currentPosition.getValue() - 1));
+        }
+
+        if (currentPosition.getKey() + 1 < maxX) {
+            possible.add(new Pair<>(currentPosition.getKey() + 1, currentPosition.getValue()));
+        }
+
+        if (currentPosition.getValue() + 1 < maxY) {
+            possible.add(new Pair<>(currentPosition.getKey(), currentPosition.getValue() + 1));
+        }
+
         return possible;
     }
 
-    private Pair<Integer, Integer> getStartPos() {
-        for (int y = 0; y < field.length; y++) {
-            for (int x = 0; x < field[y].length; x++) {
-                if (getField(y, x) == '@') {
-                    return new Pair<>(y, x);
-                }
-            }
+    public static class Reachable implements Link {
+        private List<Character> doors;
+        private int distance;
+
+        public Reachable(int distance, List<Character> doors) {
+            this.distance = distance;
+            this.doors = doors;
         }
 
-        return null;
-    }
-
-    private Map<Character, Pair<Integer, Integer>> getAllKeys() {
-        Map<Character, Pair<Integer, Integer>> results = new HashMap<>();
-
-        for (int y = 0; y < field.length; y++) {
-            for (int x = 0; x < field[y].length; x++) {
-                if (isKey(y, x)) {
-                    results.put(getField(y, x), new Pair<>(y, x));
-                }
-            }
+        public boolean allClear(List<Character> openDoors) {
+            return doors.stream().allMatch(door -> openDoors.contains(Character.toLowerCase(door)));
         }
 
-        return results;
-    }
-
-    private void findLocks(char key, Pair<Integer, Integer> startPos,
-            Pair<Integer, Integer> lastPos, List<Pair<Integer, Integer>> visited,
-            List<Pair<Integer, Integer>> way,
-            List<Pair<List<Pair<Integer, Integer>>, Set<Character>>> solutions,
-            Set<Character> currLocks) {
-
-        List<Pair<Integer, Integer>> possibleMoves = getPossibleMoves(startPos.getKey(), startPos.getValue(), lastPos);
-
-        for (Pair<Integer, Integer> p : possibleMoves) {
-            if (!visited.contains(p)) {
-                List<Pair<Integer, Integer>> visitedClone = new ArrayList<>(visited);
-                visitedClone.add(p);
-
-                if (isKey(p.getKey(), p.getValue())) {
-                    if (getField(p.getKey(), p.getValue()) == key) {
-                        way.add(p);
-                        solutions.add(new Pair<>(way, currLocks));
-                    }
-                } else if (isLock(p.getKey(), p.getValue())) {
-                    currLocks.add(getField(p.getKey(), p.getValue()));
-                }
-
-                if (!isWall(p.getKey(), p.getValue())) {
-                    Set<Character> currLocksClone = new HashSet<>(currLocks);
-                    List<Pair<Integer, Integer>> wayClone = new ArrayList<>(way);
-                    wayClone.add(p);
-
-                    findLocks(key, new Pair<>(p.getKey(), p.getValue()), startPos, visitedClone,
-                            wayClone, solutions, currLocksClone);
-                }
-            }
+        public int getDistance() {
+            return this.distance;
         }
     }
 
-    private List<Pair<Integer, Integer>> getPossibleMoves(int y, int x,
-            Pair<Integer, Integer> lastPos) {
-        List<Pair<Integer, Integer>> moves = new ArrayList<>();
+    public static class Unreachable implements Link {
 
-        if (y > 0) {
-            moves.add(new Pair<>(y - 1, x));
+        public boolean allClear(List<Character> openDoors) {
+            return false;
         }
 
-        if (y < field.length - 1) {
-            moves.add(new Pair<>(y + 1, x));
+        public int getDistance() {
+            return Integer.MAX_VALUE;
+        }
+    }
+
+    public static class Key {
+        private Pair<Integer, Integer> position;
+        private Map<Character, Link> links;
+
+        public Key(Pair<Integer, Integer> position) {
+            this.position = position;
+            links = new HashMap<>();
         }
 
-        if (x > 0) {
-            moves.add(new Pair<>(y, x - 1));
+        public Pair<Integer, Integer> getPosition() {
+            return position;
         }
 
-        if (x < field[0].length - 1) {
-            moves.add(new Pair<>(y, x + 1));
+        public Map<Character, Link> getLinks() {
+            return links;
+        }
+    }
+
+    public static class QueueElement {
+        private Pair<Integer, Integer> position;
+        private int distance;
+        private List<Character> doors;
+
+        public QueueElement(Pair<Integer, Integer> position, int distance, List<Character> doors) {
+            this.position = position;
+            this.distance = distance;
+            this.doors = doors;
         }
 
-        List<Pair<Integer, Integer>> walls = new ArrayList<>();
-
-        for (Pair<Integer, Integer> move : moves) {
-            if (isWall(move.getKey(), move.getValue())) {
-                walls.add(move);
-            }
-
-            if (lastPos != null) {
-                if (move.getKey().equals(lastPos.getKey()) && move.getValue()
-                        .equals(lastPos.getValue())) {
-                    walls.add(move);
-                }
-            }
+        public Pair<Integer, Integer> getPosition() {
+            return position;
         }
 
-        for (Pair<Integer, Integer> i : walls) {
-            moves.remove(i);
+        public int getDistance() {
+            return distance;
         }
 
-        return moves;
-    }
-
-    private boolean isWall(int y, int x) {
-        return getField(y, x) == '#';
-    }
-
-    private boolean isSpace(int y, int x) {
-        return getField(y, x) == '.' || getField(y,x) == '@';
-    }
-
-    private boolean isLock(int y, int x) {
-        char val = getField(y, x);
-
-        return val >= 65 && val <= 90;
-    }
-
-    private boolean isKey(int y, int x) {
-        char val = getField(y, x);
-
-        return val >= 97 && val <= 122;
-    }
-
-    private char getField(int y, int x) {
-        return field[y][x];
-    }
-
-    public void print() {
-        for (int y = 0; y < field.length; y++) {
-            for (int x = 0; x < field[y].length; x++) {
-                System.out.print(field[y][x]);
-            }
-            System.out.println();
+        public List<Character> getDoors() {
+            return doors;
         }
     }
 }

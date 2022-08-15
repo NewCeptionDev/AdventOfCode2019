@@ -25,4 +25,8 @@ public class Pair<E, F> {
     public void setValue(F value) {
         this.value = value;
     }
+
+    @Override public String toString() {
+        return "Pair{" + "key=" + key + ", value=" + value + '}';
+    }
 }
