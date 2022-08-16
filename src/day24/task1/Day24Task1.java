@@ -1,10 +1,9 @@
 package day24.task1;
 
-import util.Pair;
 import util.InputReader;
+import util.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Day24Task1 {
 
@@ -14,200 +13,112 @@ public class Day24Task1 {
         new Day24Task1(in);
     }
 
-    private List<Area> oldStates = new ArrayList<>();
-
     public Day24Task1(List<String> input) {
+        List<String> previousAreas = new ArrayList<>();
 
-        Area first =  parseToArea(input);
-        oldStates.add(new Area(first.updateArea()));
+        Area currentArea = new Area(input);
+        previousAreas.add(currentArea.toAreaString());
+        while(true) {
+            currentArea = new Area(currentArea.nextGeneration());
 
+            if(previousAreas.contains(currentArea.toAreaString())) {
+                System.out.println(currentArea.toAreaString());
+                System.out.println(currentArea.calculateBiodiversityRating());
+                return;
+            }
+            previousAreas.add(currentArea.toAreaString());
+        }
+    }
 
-        List<Pair<Integer, Integer>> firstTimeSameLayout = null;
+    public static class Area {
+        Map<Integer, Map<Integer, Character>> map = new HashMap<>();
 
+        public Area(String areaString) {
+            this(Arrays.asList(areaString.split(",")));
+        }
 
-        boolean done = false;
-        while(!done){
-            System.out.println("Step");
-            Area nextArea = new Area(oldStates.get(oldStates.size()-1).updateArea());
-
-            for(Area a : oldStates){
-                System.out.println("Comparing: ");
-                nextArea.print();
-                System.out.println("With: ");
-                a.print();
-                System.out.println("------");
-
-                List<Pair<Integer, Integer>> sameLayout = nextArea.compareToArea(a);
-
-                if(sameLayout != null){
-                    done = true;
-                    firstTimeSameLayout = sameLayout;
-                    System.out.println("Same Layout Done: ");
-                    System.out.println(sameLayout);
-                    break;
+        public Area(List<String> lines) {
+            for(int y = 0; y < lines.size(); y++) {
+                map.put(y, new HashMap<>());
+                for(int x = 0; x < lines.get(y).length(); x++) {
+                    map.get(y).put(x, lines.get(y).charAt(x));
                 }
             }
-
-            oldStates.add(nextArea);
         }
 
-        System.out.println("Old States: ");
-        for(Area a : oldStates){
-            a.print();
-            System.out.println("-----");
-        }
-
-        long sum = 0;
-
-        for(Pair<Integer, Integer> p : firstTimeSameLayout){
-            if(oldStates.get(oldStates.size()-1).isBug(p.getKey(), p.getValue())){
-                sum += Math.pow(2, (5 * p.getKey() + p.getValue()));
+        public String toAreaString() {
+            String areaString = "";
+            for(int y : map.keySet()) {
+                areaString += map.get(y).values().stream().map(val -> val + "").reduce("", String::concat);
             }
+
+            return areaString;
         }
 
-        System.out.println("Sum: " + sum);
+        public String nextGeneration() {
+            String areaString = "";
+            for(int y = 0; y < map.size(); y++) {
+                for(int x = 0; x < map.get(y).size(); x++) {
+                    List<Pair<Integer, Integer>> surroundingPositions = getSurroundingPositions(map.get(0).size(), map.size(), new Pair<>(x, y));
 
-    }
+                    long adjacentBugs = surroundingPositions.stream().filter(pos -> map.get(pos.getValue()).get(pos.getKey()) == '#').count();
 
-    private Area parseToArea(List<String> l){
-        char[][] area = new char[5][5];
-
-        for(int i = 0; i < l.size(); i++){
-            area[i] = l.get(i).toCharArray();
-        }
-
-        return new Area(area);
-    }
-
-    private class Area {
-        char[][] fields;
-
-        public Area(char[][] area) {
-            this.fields = area;
-        }
-
-        public char[][] updateArea() {
-            char[][] nextArea = new char[5][5];
-
-            for (int y = 0; y < fields.length; y++) {
-                for (int x = 0; x < fields[y].length; x++) {
-                    int adjactedBugs = adjactedBugs(y, x);
-                    if (isBug(y, x)) {
-                        if (adjactedBugs == 1) {
-                            nextArea[y][x] = '#';
+                    if(map.get(y).get(x) == '#') {
+                        if(adjacentBugs == 1) {
+                            areaString += '#';
                         } else {
-                            nextArea[y][x] = '.';
+                            areaString += '.';
                         }
                     } else {
-                        if (adjactedBugs == 1 || adjactedBugs == 2) {
-                            nextArea[y][x] = '#';
+                        if(adjacentBugs == 1 || adjacentBugs == 2) {
+                            areaString += '#';
                         } else {
-                            nextArea[y][x] = '.';
+                            areaString += '.';
                         }
                     }
                 }
+                areaString += ",";
             }
 
-            return nextArea;
+            return areaString;
         }
 
-        private boolean isBug(int y, int x) {
-            if (fields[y][x] == '#') {
-                return true;
-            }
+        public long calculateBiodiversityRating() {
+            long bioDiv = 0;
 
-            return false;
-        }
+            for(int y = 0; y < map.size(); y++) {
+                for(int x = 0; x < map.get(y).size(); x++) {
+                    int pos = y * map.get(y).size() + x;
 
-        private int adjactedBugs(int y, int x) {
-            int bugCount = 0;
-
-            for (Pair<Integer, Integer> p : getNeighbours(y, x)) {
-                if (isBug(p.getKey(), p.getValue())) {
-                    bugCount++;
-                }
-            }
-
-            return bugCount;
-        }
-
-        private List<Pair<Integer, Integer>> getNeighbours(int y, int x) {
-            List<Pair<Integer, Integer>> neighbours = new ArrayList<>();
-
-            if (y > 0) {
-                neighbours.add(new Pair<>(y - 1, x));
-            }
-
-            if (y < 4) {
-                neighbours.add(new Pair<>(y + 1, x));
-            }
-
-            if (x > 0) {
-                neighbours.add(new Pair<>(y, x - 1));
-            }
-
-            if (x < 4) {
-                neighbours.add(new Pair<>(y, x + 1));
-            }
-
-            return neighbours;
-        }
-
-        private List<Pair<Integer,Integer>> compareToArea(Area a) {
-            List<Pair<Integer, Integer>> sameFields = new ArrayList<>();
-
-            for (int y = 0; y < fields.length; y++) {
-                for (int x = 0; x < fields[y].length; x++) {
-                    if (getField(y,x) == a.getField(y,x)) {
-                        sameFields.add(new Pair<>(y, x));
+                    if(map.get(y).get(x) == '#') {
+                        bioDiv += Math.pow(2, pos);
                     }
                 }
             }
 
-            List<Pair<Integer, Integer>> overallLayout = null;
-            for (Pair<Integer, Integer> i : sameFields) {
-                List<Pair<Integer, Integer>> layout;
+            return bioDiv;
+        }
+    }
 
-                layout = checkForAdjectedFields(i.getKey(), i.getValue(), a);
+    public static List<Pair<Integer, Integer>> getSurroundingPositions(int maxX, int maxY, Pair<Integer, Integer> position) {
+        List<Pair<Integer, Integer>> surrounding = new ArrayList<>();
 
-                if (layout != null) {
-                    System.out.println("Found Layout");
-                    overallLayout = layout;
-                }
-            }
-
-            return overallLayout;
+        if(position.getKey() > 0) {
+            surrounding.add(new Pair<>(position.getKey() - 1, position.getValue()));
         }
 
-        private char getField(int y, int x){
-            return fields[y][x];
+        if(position.getValue() > 0) {
+            surrounding.add(new Pair<>(position.getKey(), position.getValue() - 1));
         }
 
-        private List<Pair<Integer, Integer>> checkForAdjectedFields(int y, int x, Area a) {
-            List<Pair<Integer, Integer>> neighbours = getNeighbours(y, x);
-            List<Pair<Integer, Integer>> sameFields = new ArrayList<>();
-            sameFields.add(new Pair<>(y, x));
-
-            for (Pair<Integer, Integer> p : neighbours) {
-                if (getField(p.getKey(),p.getValue()) == a.getField(p.getKey(),p.getValue())) {
-                    sameFields.add(p);
-                }
-            }
-
-            if(sameFields.size() == neighbours.size() + 1){
-                return sameFields;
-            }
-
-            return null;
+        if(position.getKey() + 1 < maxX) {
+            surrounding.add(new Pair<>(position.getKey() + 1, position.getValue()));
         }
 
-        private void print(){
-            for(int y = 0; y < fields.length; y++){
-                for(int x = 0; x < fields[y].length; x++){
-                    System.out.print(fields[y][x]);
-                }
-                System.out.println();
-            }
+        if(position.getValue() + 1 < maxY) {
+            surrounding.add(new Pair<>(position.getKey(), position.getValue() + 1));
         }
+
+        return surrounding;
     }
 }
