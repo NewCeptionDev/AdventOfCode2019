@@ -15,7 +15,7 @@ public class Day22Task1Test {
                 "deal into new stack"
         };
 
-        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()));
+        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()), 10);
     }
 
     @Test
@@ -24,7 +24,7 @@ public class Day22Task1Test {
                 "deal with increment 3",
         };
 
-        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()));
+        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()), 10);
     }
 
     @Test
@@ -35,7 +35,7 @@ public class Day22Task1Test {
                 "deal into new stack"
         };
 
-        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()));
+        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()), 10);
     }
 
     @Test
@@ -46,7 +46,7 @@ public class Day22Task1Test {
                 "cut -2"
         };
 
-        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()));
+        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()), 10);
     }
 
     @Test
@@ -64,7 +64,7 @@ public class Day22Task1Test {
                 "cut -1"
         };
 
-        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()));
+        new Day22Task1(Arrays.stream(in).collect(Collectors.toList()), 10);
     }
 
 }

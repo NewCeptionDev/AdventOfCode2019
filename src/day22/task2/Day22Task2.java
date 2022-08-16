@@ -2,12 +2,16 @@ package day22.task2;
 
 import util.InputReader;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.math.BigInteger;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
+import static java.math.BigInteger.*;
+import static java.util.stream.Collectors.toCollection;
+
+// Taken from https://github.com/saidaspen/aoc2019/blob/master/java/src/main/java/se/saidaspen/aoc2019/day22/Day22.java
 public class Day22Task2 {
 
     public static void main(String[] args) {
@@ -16,69 +20,66 @@ public class Day22Task2 {
         new Day22Task2(instructions);
     }
 
-    private List<Long> deck;
+    private String input;
+
+    private BigInteger nCards = valueOf(119315717514047L);
+    private BigInteger nShuffles = valueOf(101741582076661L);
 
     public Day22Task2(List<String> instructions) {
-
-        deck = LongStream.iterate(0, i -> i + 1).limit(119315717514047L).boxed().collect(Collectors.toList());
-        //deck = IntStream.iterate(0, i -> i + 1).limit(10).boxed().collect(Collectors.toList()); //JUST FOR TESTS
-
-        for (long i = 0; i < 101741582076661L; i++) {
-            for (String s : instructions) {
-                String[] splitted = s.split(" ");
-
-                if (splitted[0].equals("cut")) {
-                    int toCut = Integer.parseInt(splitted[1]);
-                    cutDeck(toCut);
-                } else if (splitted[1].equals("into")) {
-                    reverseDeck();
-                } else {
-                    int increment = Integer.parseInt(splitted[3]);
-                    incrementDeck(increment);
-                }
-            }
-        }
-
-        System.out.println("Finished: " + deck);
-        System.out.println("2020 is at Position: " + deck.indexOf(2020));
+        System.out.println("2020 is at Position: " + cardAt(instructions, valueOf(2020)));
     }
 
-    private void cutDeck(int count) {
-        List<Long> newDeck;
+    public static class LinFunc {
+        BigInteger k;
+        BigInteger m;
 
-        if (count < 0) {
-            List<Long> cut = deck.subList(deck.size() + count, deck.size());
-            newDeck = new ArrayList<>(cut);
-            newDeck.addAll(deck.subList(0, deck.size() + count));
+        public LinFunc(BigInteger k, BigInteger m) {
+            this.k = k;
+            this.m = m;
+        }
+
+        BigInteger apply(BigInteger x) {
+            return x.multiply(k).add(m);
+        }
+    }
+
+    private static final LinFunc ID = new LinFunc(ONE, ZERO);
+
+    private LinFunc agg(LinFunc f, LinFunc g) {
+        return new LinFunc(g.k.multiply(f.k), g.k.multiply(f.m).add(g.m));
+    }
+
+    BigInteger cardAt(List<String> instructions, BigInteger in) {
+        LinFunc shuffle = reverse(instructions.stream().map(line -> {
+            String[] split = line.split(" ");
+
+            if (split[0].equals("cut")) {
+                BigInteger toCut = new BigInteger(split[1]);
+                return new LinFunc(ONE, toCut.mod(nCards));
+            } else if (split[1].equals("into")) {
+                return new LinFunc(ONE.negate(), ONE.negate().subtract(nCards));
+            } else {
+                BigInteger increment = new BigInteger(split[3]).modInverse(nCards);
+                return new LinFunc(ONE.multiply(increment).mod(nCards), ZERO);
+            }
+        })).reduce(ID, this::agg);
+
+        return executeTimes(shuffle.k, shuffle.m, nShuffles).apply(in).mod(nCards);
+    }
+
+    public static <T> Stream<T> reverse(Stream<T> stream) {
+        Iterable<T> iterable = () -> stream.collect(toCollection(LinkedList::new)).descendingIterator();
+        return StreamSupport.stream(iterable.spliterator(), false);
+    }
+
+    private LinFunc executeTimes(BigInteger k, BigInteger m, BigInteger nShuffles) {
+        if (nShuffles.equals(ZERO)) {
+            return ID;
+        } else if (nShuffles.mod(TWO).equals(ZERO)) {
+            return executeTimes(k.multiply(k).mod(nCards), k.multiply(m).add(m).mod(nCards), nShuffles.divide(TWO));
         } else {
-            List<Long> cut = deck.subList(0, count);
-            newDeck = new ArrayList<>(deck.subList(count, deck.size()));
-            newDeck.addAll(cut);
-        }
-
-        deck = newDeck;
-        System.out.println("Cutted: " + deck);
-    }
-
-    private void reverseDeck() {
-        Collections.reverse(deck);
-
-        System.out.println("Reversed: " + deck);
-    }
-
-    private void incrementDeck(int increment) {
-        List<Long> newDeck = LongStream.iterate(0, i -> i).limit(deck.size()).boxed().collect(Collectors.toList());
-
-        increment--;
-
-        int i = 0;
-        for (int j = 0; j < deck.size(); j++, i += increment) {
-            if (i > deck.size() - 1) {
-                i -= deck.size();
-            }
-
-            newDeck.set(i, deck.get(j));
-            i++;
+            LinFunc cd = executeTimes(k, m, nShuffles.subtract(ONE));
+            return new LinFunc(k.multiply(cd.k).mod(nCards), k.multiply(cd.m).add(m).mod(nCards));
         }
     }
 }

@@ -13,15 +13,14 @@ public class Day22Task1 {
     public static void main(String[] args) {
         List<String> instructions = InputReader.read("src/day22/task1/input.txt");
 
-        new Day22Task1(instructions);
+        new Day22Task1(instructions, 10007);
     }
 
     private List<Integer> deck;
 
-    public Day22Task1(List<String> instructions) {
+    public Day22Task1(List<String> instructions, int maxSize) {
 
-        deck = IntStream.iterate(0, i -> i + 1).limit(10007).boxed().collect(Collectors.toList());
-        //deck = IntStream.iterate(0, i -> i + 1).limit(10).boxed().collect(Collectors.toList()); //JUST FOR TESTS
+        deck = IntStream.iterate(0, i -> i + 1).limit(maxSize).boxed().collect(Collectors.toList());
 
         for (String s : instructions) {
             String[] splitted = s.split(" ");
@@ -55,13 +54,10 @@ public class Day22Task1 {
         }
 
         deck = newDeck;
-        System.out.println("Cutted: " + deck);
     }
 
     private void reverseDeck() {
         Collections.reverse(deck);
-
-        System.out.println("Reversed: " + deck);
     }
 
     private void incrementDeck(int increment) {
@@ -83,6 +79,5 @@ public class Day22Task1 {
         }
 
         deck = newDeck;
-        System.out.println("Incremented: " + deck);
     }
 }
